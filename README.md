@@ -1,15 +1,22 @@
-# Seizure Detection
+# Seizure Detection & Prediction
 
-This repository contains the winning submission for UPenn and Mayo Clinic's Seizure Detection Challenge on Kaggle.
+This repository is an attempt to solve the American Epilepsy Society Seizure Prediction Challenge on [Kaggle](https://www.kaggle.com/c/seizure-prediction).
 
-http://www.kaggle.com/c/seizure-detection
+This repository started of from the [winning submission](https://github.com/MichaelHills/seizure-detection) for UPenn and Mayo Clinic's Seizure Detection Challenge on [Kaggle](http://www.kaggle.com/c/seizure-detection).
+
+An attempt was made to keep the two tasks (detection and prediction) continue to work with this repository.
+You can select which task (prediction or detection) is being carried using 
+```
+  "task": "predict",
+```
+inside `SETTINGS.json` (the defaut is predict.)
 
 This README and repository modelled on https://www.kaggle.com/wiki/ModelSubmissionBestPractices
 
 ##Hardware / OS platform used
 
- * 15" Retina MacBook Pro (Late 2013) 2.7GHz Core i7, 16GB RAM
- * OS X Mavericks
+ * 15" Retina MacBook Pro (Mid 2012) 2.6GHz Core i7, 16GB RAM
+ * OS X 10.9.4
 
 ##Dependencies
 
@@ -33,14 +40,14 @@ Obtain the competition data and place it in the root directory of the project.
 ```
 seizure-data/
   Dog_1/
-    Dog_1_ictal_segment_1.mat
-    Dog_1_ictal_segment_2.mat
+    Dog_1_preictal_segment_0001.mat
+    Dog_1_preictal_segment_0002.mat
     ...
-    Dog_1_interictal_segment_1.mat
-    Dog_1_interictal_segment_2.mat
+    Dog_1_interictal_segment_0001.mat
+    Dog_1_interictal_segment_0002.mat
     ...
-    Dog_1_test_segment_1.mat
-    Dog_1_test_segment_2.mat
+    Dog_1_test_segment_0001.mat
+    Dog_1_test_segment_0002.mat
     ...
 
   Dog_2/
@@ -84,8 +91,8 @@ i.e.
 ```
 seizure-data/
   Dog_1/
-    Dog_1_test_segment_1.mat
-    Dog_1_test_segment_2.mat
+    Dog_1_test_segment_0001.mat
+    Dog_1_test_segment_0002.mat
     ...
     Dog_1_test_segment_3181.mat
 ```
@@ -116,12 +123,14 @@ Cross-validation set is obtained by splitting on entire seizures. For example if
 
 ```
 {
+  "task": "predict",
   "competition-data-dir": "seizure-data",
   "data-cache-dir": "data-cache",
   "submission-dir": "./submissions"
 }
 ```
 
+* `task`: can have the value `predict`, any other value will change the task to detection
 * `competition-data-dir`: directory containing the downloaded competition data
 * `data-cache-dir`: directory the task framework will store cached data
 * `submission-dir`: directory submissions are written to
@@ -129,4 +138,5 @@ Cross-validation set is obtained by splitting on entire seizures. For example if
 
 ## Model documentation
 
-Available at https://github.com/MichaelHills/seizure-detection/raw/master/seizure-detection.pdf
+The original detection model is 
+available at https://github.com/MichaelHills/seizure-detection/raw/master/seizure-detection.pdf

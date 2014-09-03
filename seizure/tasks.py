@@ -6,6 +6,8 @@ import common.time as time
 from sklearn import cross_validation, preprocessing
 from sklearn.metrics import roc_curve, auc
 
+task_predict = True
+
 TaskCore = namedtuple('TaskCore', ['cached_data_loader', 'data_dir', 'target', 'pipeline', 'classifier_name',
                                    'classifier', 'normalize', 'gen_ictal', 'cv_ratio'])
 
@@ -49,6 +51,16 @@ class LoadInterictalDataTask(Task):
     def load_data(self):
         return parse_input_data(self.task_core.data_dir, self.task_core.target, 'interictal', self.task_core.pipeline)
 
+class LoadPreictalDataTask(Task):
+    """
+    Load the pre-ictal mat files 1 by 1, transform each 1-second segment through the pipeline
+    and return data in the format {'X': X, 'Y': y}
+    """
+    def filename(self):
+        return 'data_preictal_%s_%s' % (self.task_core.target, self.task_core.pipeline.get_name())
+
+    def load_data(self):
+        return parse_input_data(self.task_core.data_dir, self.task_core.target, 'preictal', self.task_core.pipeline)
 
 class LoadTestDataTask(Task):
     """
@@ -70,7 +82,10 @@ class TrainingDataTask(Task):
         return None  # not cached, should be fast enough to not need caching
 
     def load_data(self):
-        ictal_data = LoadIctalDataTask(self.task_core).run()
+        if task_predict:
+            ictal_data = LoadPreictalDataTask(self.task_core).run()
+        else:
+            ictal_data = LoadIctalDataTask(self.task_core).run()
         interictal_data = LoadInterictalDataTask(self.task_core).run()
         return prepare_training_data(ictal_data, interictal_data, self.task_core.cv_ratio)
 
@@ -140,7 +155,11 @@ def load_mat_data(data_dir, target, component):
     i = 0
     while not done:
         i += 1
-        filename = '%s/%s_%s_segment_%d.mat' % (dir, target, component, i)
+        if task_predict:
+            filename = '%s/%s_%s_segment_%04d.mat' % (dir, target, component, i)
+        else:
+            filename = '%s/%s_%s_segment_%d.mat' % (dir, target, component, i)
+
         if os.path.exists(filename):
             data = scipy.io.loadmat(filename)
             yield(data)
@@ -154,7 +173,7 @@ def load_mat_data(data_dir, target, component):
 # data_type is one of ('ictal', 'interictal', 'test')
 def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
     ictal = data_type == 'ictal'
-    interictal = data_type == 'interictal'
+    interictal = data_type == 'interictal' or data_type == 'preictal'
 
     mat_data = load_mat_data(data_dir, target, data_type)
 
@@ -170,7 +189,11 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
         prev_data = None
         prev_latency = None
         for segment in mat_data:
-            data = segment['data']
+            if task_predict:
+                for key in segment.keys():
+                    if not key.startswith('_'):
+                        break
+                data = segment[key]['data'][0,0]
             transformed_data = pipeline.apply(data)
 
             if with_latency:
@@ -201,7 +224,10 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                 prev_latency = latency
             elif y is not None:
                 # this is interictal
-                y.append(2)
+                if key.startswith('preictal'):
+                    y.append(0) # seizure
+                else:
+                    y.append(2) # no seizure
 
             X.append(transformed_data)
             prev_data = data
@@ -253,13 +279,16 @@ def flatten(data):
 
 
 # split up ictal and interictal data into training set and cross-validation set
-def prepare_training_data(ictal_data, interictal_data, cv_ratio):
+def prepare_training_data(ictal_data, interictal_data, cv_ratio, withlatency=False):
     print 'Preparing training data ...',
     ictal_X, ictal_y = flatten(ictal_data.X), ictal_data.y
     interictal_X, interictal_y = flatten(interictal_data.X), interictal_data.y
 
     # split up data into training set and cross-validation set for both seizure and early sets
-    ictal_X_train, ictal_y_train, ictal_X_cv, ictal_y_cv = split_train_ictal(ictal_X, ictal_y, ictal_data.latencies, cv_ratio)
+    if withlatency:
+        ictal_X_train, ictal_y_train, ictal_X_cv, ictal_y_cv = split_train_ictal(ictal_X, ictal_y, ictal_data.latencies, cv_ratio)
+    else:
+        ictal_X_train, ictal_y_train, ictal_X_cv, ictal_y_cv = split_train_random(ictal_X, ictal_y, cv_ratio)
     interictal_X_train, interictal_y_train, interictal_X_cv, interictal_y_cv = split_train_random(interictal_X, interictal_y, cv_ratio)
 
     def concat(a, b):
@@ -445,7 +474,10 @@ def make_predictions(target, X_test, y_classes, classifier_data):
     for i in range(len(predictions_proba)):
         p = predictions_proba[i]
         S, E = translate_prediction(p, y_classes)
-        lines.append('%s_test_segment_%d.mat,%.15f,%.15f' % (target, i+1, S, E))
+        if task_predict:
+            lines.append('%s_test_segment_%d.mat,%.15f' % (target, i+1, S))
+        else:
+            lines.append('%s_test_segment_%d.mat,%.15f,%.15f' % (target, i+1, S, E))
 
     return {
         'data': '\n'.join(lines)

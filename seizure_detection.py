@@ -7,6 +7,7 @@ from common.pipeline import Pipeline
 from seizure.transforms import FFT, Slice, Magnitude, Log10, FFTWithTimeFreqCorrelation, MFCC, Resample, Stats, \
     DaubWaveletStats, TimeCorrelation, FreqCorrelation, TimeFreqCorrelation
 from seizure.tasks import TaskCore, CrossValidationScoreTask, MakePredictionsTask, TrainClassifierTask
+import seizure.tasks
 from seizure.scores import get_score_summary, print_results
 
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier, \
@@ -31,6 +32,7 @@ def run_seizure_detection(build_target):
     data_dir = str(settings['competition-data-dir'])
     cache_dir = str(settings['data-cache-dir'])
     submission_dir = str(settings['submission-dir'])
+    seizure.tasks.task_predict = str(settings.get('task')) == 'predict'
 
     makedirs(submission_dir)
 
@@ -40,17 +42,18 @@ def run_seizure_detection(build_target):
 
     targets = [
         'Dog_1',
-        'Dog_2',
-        'Dog_3',
-        'Dog_4',
-        'Patient_1',
-        'Patient_2',
-        'Patient_3',
-        'Patient_4',
-        'Patient_5',
-        'Patient_6',
-        'Patient_7',
-        'Patient_8'
+        # 'Dog_2',
+        # 'Dog_3',
+        # 'Dog_4',
+        'Dog_5',
+        # 'Patient_1',
+        # 'Patient_2',
+        # 'Patient_3',
+        # 'Patient_4',
+        # 'Patient_5',
+        # 'Patient_6',
+        # 'Patient_7',
+        # 'Patient_8'
     ]
     pipelines = [
         # NOTE(mike): you can enable multiple pipelines to run them all and compare results
@@ -101,7 +104,10 @@ def run_seizure_detection(build_target):
         for pipeline in pipelines:
             for (classifier, classifier_name) in classifiers:
                 print 'Using pipeline %s with classifier %s' % (pipeline.get_name(), classifier_name)
-                guesses = ['clip,seizure,early']
+                if seizure.tasks.task_predict:
+                    guesses = ['clip,preictal']
+                else:
+                    guesses = ['clip,seizure,early']
                 classifier_filenames = []
                 for target in targets:
                     task_core = TaskCore(cached_data_loader=cached_data_loader, data_dir=data_dir,
