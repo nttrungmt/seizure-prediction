@@ -1,15 +1,18 @@
 # Seizure Detection & Prediction
 
-This repository is an attempt to solve the American Epilepsy Society Seizure Prediction Challenge on [Kaggle](https://www.kaggle.com/c/seizure-prediction).
-
-This repository started of from the [winning submission](https://github.com/MichaelHills/seizure-detection) for UPenn and Mayo Clinic's Seizure Detection Challenge on [Kaggle](http://www.kaggle.com/c/seizure-detection).
+This repository is an attempt to solve the
+[American Epilepsy Society Seizure Prediction Challenge](](https://www.kaggle.com/c/seizure-prediction)
+on Kaggle.
+This repository started of from the [winning submission](https://github.com/MichaelHills/seizure-detection) for
+[UPenn and Mayo Clinic's Seizure Detection Challenge](http://www.kaggle.com/c/seizure-detection) on Kaggle.
 
 An attempt was made to keep the two tasks (detection and prediction) continue to work with this repository.
 You can select which task (prediction or detection) is being carried using 
 ```
   "task": "predict",
 ```
-inside `SETTINGS.json` (the defaut is predict.)
+inside `SETTINGS.json` (the defaut is detect.) This flag also perform the necessary corrections necessary to
+handle the differences in the file formats used in the two competions.
 
 This README and repository modelled on https://www.kaggle.com/wiki/ModelSubmissionBestPractices
 
