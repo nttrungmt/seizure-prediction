@@ -57,3 +57,7 @@ docs/_build/
 data-cache/
 seizure-data/
 submissions/
+data-cache
+notebooks/.ipynb_checkpoints/
+seizure-data
+submissions
