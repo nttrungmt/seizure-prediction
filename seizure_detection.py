@@ -41,14 +41,15 @@ def run_seizure_detection(build_target):
     ts = time.get_millis()
 
     if seizure.tasks.task_predict:
+        # add the number of test examples for each target, assuming this is the relative weight in the leaderboard
         targets = [
-            'Dog_1',
-            'Dog_2',
-            'Dog_3',
-            'Dog_4',
-            'Dog_5',
-            'Patient_1',
-            'Patient_2',
+            ('Dog_1',502),
+            ('Dog_2',1000),
+            ('Dog_3',907),
+            ('Dog_4',990),
+            ('Dog_5',191),
+            ('Patient_1',195),
+            ('Patient_2',150),
         ]
     else:
         targets = [
@@ -105,8 +106,14 @@ def run_seizure_detection(build_target):
         # (RandomForestClassifier(n_estimators=50, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf50mss1Bfrs0'),
         # (RandomForestClassifier(n_estimators=150, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf150mss1Bfrs0'),
         # (RandomForestClassifier(n_estimators=300, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf300mss1Bfrs0'),
-        #(RandomForestClassifier(n_estimators=3000, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf3000mss1Bfrs0'),
-        (RandomForestClassifier(n_estimators=300, max_depth=6, n_jobs=-1), 'rf1000d6'),
+        (RandomForestClassifier(n_estimators=3000, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf3000mss1Bfrs0'),
+        (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=10, bootstrap=True, n_jobs=-1, random_state=0), 'rf3000mss1md10Bt'),
+        (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=10, bootstrap=False, n_jobs=-1, random_state=0), 'rf3000mss1md10Bf'),
+        (GradientBoostingClassifier(n_estimators=500,min_samples_split=1,),'gbc500mss1'),
+        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0),'gbc1000mss1'),
+        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.03),'gbc1000mss1lr03'),
+        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.01),'gbc1000mss1lr01'),
+        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.01, max_depth=1000),'gbc1000mss1lr01md1000'),
    ]
     cv_ratio = 0.5
 
@@ -124,6 +131,10 @@ def run_seizure_detection(build_target):
                     guesses = ['clip,seizure,early']
                 classifier_filenames = []
                 for target in targets:
+                    if isinstance(target,tuple):
+                        target, leaderboard_weight = target
+                    else:
+                        leaderboard_weight = 1
                     task_core = TaskCore(cached_data_loader=cached_data_loader, data_dir=data_dir,
                                          target=target, pipeline=pipeline,
                                          classifier_name=classifier_name, classifier=classifier,
@@ -157,7 +168,13 @@ def run_seizure_detection(build_target):
                 scores = []
                 S_scores = []
                 E_scores = []
+                leaderboard_weights = []
                 for target in targets:
+                    if isinstance(target,tuple):
+                        target, leaderboard_weight = target
+                    else:
+                        leaderboard_weight = 1
+                    leaderboard_weights.append(leaderboard_weight)
                     print 'Processing %s (classifier %s)' % (target, classifier_name)
 
                     task_core = TaskCore(cached_data_loader=cached_data_loader, data_dir=data_dir,
@@ -177,16 +194,17 @@ def run_seizure_detection(build_target):
 
                 if len(scores) > 0:
                     name = pipeline.get_name() + '_' + classifier_name
-                    summary = get_score_summary(name, scores)
-                    summaries.append((summary, np.mean(scores)))
+                    weighted_average = np.average(scores, weights=leaderboard_weights)
+                    summary = get_score_summary(name, scores, weighted_average)
+                    summaries.append((summary, weighted_average))
                     print summary
                 if len(S_scores) > 0:
                     name = pipeline.get_name() + '_' + classifier_name
-                    summary = get_score_summary(name, S_scores)
+                    summary = get_score_summary(name, S_scores, np.mean(S_scores))
                     print 'S', summary
                 if len(E_scores) > 0:
                     name = pipeline.get_name() + '_' + classifier_name
-                    summary = get_score_summary(name, E_scores)
+                    summary = get_score_summary(name, E_scores, np.mean(E_scores))
                     print 'E', summary
 
             print_results(summaries)

@@ -2,8 +2,9 @@ import numpy as np
 
 # helper methods for printing scores
 
-def get_score_summary(name, scores):
-    summary = '%.3f-%.3f (mean=%.5f std=%.5f)' % (min(scores), max(scores), np.mean(scores), np.std(scores))
+def get_score_summary(name, scores, weighted_average):
+    summary = '%.3f-%.3f (avg=%.5f mean=%.5f std=%.5f)' % (min(scores), max(scores), weighted_average,
+                                                           np.mean(scores), np.std(scores))
     score_list = ['%.3f' % score for score in scores]
     return '%s %s [%s]' % (name, summary, ','.join(score_list))
 
