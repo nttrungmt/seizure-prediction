@@ -40,21 +40,33 @@ def run_seizure_detection(build_target):
 
     ts = time.get_millis()
 
-    targets = [
-        'Dog_1',
-        # 'Dog_2',
-        # 'Dog_3',
-        # 'Dog_4',
-        'Dog_5',
-        # 'Patient_1',
-        # 'Patient_2',
-        # 'Patient_3',
-        # 'Patient_4',
-        # 'Patient_5',
-        # 'Patient_6',
-        # 'Patient_7',
-        # 'Patient_8'
-    ]
+    if seizure.tasks.task_predict:
+        targets = [
+            'Dog_1',
+            'Dog_2',
+            'Dog_3',
+            'Dog_4',
+            'Dog_5',
+            'Patient_1',
+            'Patient_2',
+        ]
+    else:
+        targets = [
+            'Dog_1',
+            'Dog_2',
+            'Dog_3',
+            'Dog_4',
+            'Dog_5',
+            'Patient_1',
+            'Patient_2',
+            'Patient_3',
+            'Patient_4',
+            'Patient_5',
+            'Patient_6',
+            'Patient_7',
+            'Patient_8'
+        ]
+
     pipelines = [
         # NOTE(mike): you can enable multiple pipelines to run them all and compare results
         # Pipeline(gen_ictal=False, pipeline=[FFT(), Slice(1, 48), Magnitude(), Log10()]),

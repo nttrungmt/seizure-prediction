@@ -19,7 +19,7 @@ This README and repository modelled on https://www.kaggle.com/wiki/ModelSubmissi
 ##Hardware / OS platform used
 
  * 15" Retina MacBook Pro (Mid 2012) 2.6GHz Core i7, 16GB RAM
- * OS X 10.9.4
+ * OS X 10.9
 
 ##Dependencies
 

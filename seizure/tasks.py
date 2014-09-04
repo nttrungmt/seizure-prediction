@@ -6,7 +6,7 @@ import common.time as time
 from sklearn import cross_validation, preprocessing
 from sklearn.metrics import roc_curve, auc
 
-task_predict = True
+task_predict = False
 
 TaskCore = namedtuple('TaskCore', ['cached_data_loader', 'data_dir', 'target', 'pipeline', 'classifier_name',
                                    'classifier', 'normalize', 'gen_ictal', 'cv_ratio'])
@@ -175,6 +175,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
     ictal = data_type == 'ictal'
     interictal = data_type == 'interictal' or data_type == 'preictal'
 
+    # create an iterator
     mat_data = load_mat_data(data_dir, target, data_type)
 
     # for each data point in ictal, interictal and test,
@@ -475,7 +476,7 @@ def make_predictions(target, X_test, y_classes, classifier_data):
         p = predictions_proba[i]
         S, E = translate_prediction(p, y_classes)
         if task_predict:
-            lines.append('%s_test_segment_%d.mat,%.15f' % (target, i+1, S))
+            lines.append('%s_test_segment_%04d.mat,%.15f' % (target, i+1, S))
         else:
             lines.append('%s_test_segment_%d.mat,%.15f,%.15f' % (target, i+1, S, E))
 
