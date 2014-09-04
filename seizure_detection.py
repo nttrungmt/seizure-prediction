@@ -5,7 +5,7 @@ from common import time
 from common.data import CachedDataLoader, makedirs
 from common.pipeline import Pipeline
 from seizure.transforms import FFT, Slice, Magnitude, Log10, FFTWithTimeFreqCorrelation, MFCC, Resample, Stats, \
-    DaubWaveletStats, TimeCorrelation, FreqCorrelation, TimeFreqCorrelation
+    DaubWaveletStats, TimeCorrelation, FreqCorrelation, TimeFreqCorrelation, WindowFFTWithTimeFreqCorrelation
 from seizure.tasks import TaskCore, CrossValidationScoreTask, MakePredictionsTask, TrainClassifierTask
 import seizure.tasks
 from seizure.scores import get_score_summary, print_results
@@ -81,7 +81,8 @@ def run_seizure_detection(build_target):
         # Pipeline(gen_ictal=False, pipeline=[Resample(400), MFCC()]),
         # Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'us')]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'us')]),
-        Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'usf')]), # winning submission
+        #Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'usf')]), # winning detection submission
+        Pipeline(gen_ictal=False, pipeline=[WindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'usf')]), # higher score than winning submission
         # Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'none')]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'none')]),

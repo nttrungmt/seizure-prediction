@@ -532,6 +532,61 @@ class FFTWithTimeFreqCorrelation:
 
     def apply(self, data):
         data1 = TimeCorrelation(self.max_hz, self.scale_option).apply(data)
+        #TODO looks like there is a bug in FreqCorrelation because it did not took the samplingfrequence/window size into consideration
         data2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(data)
         assert data1.ndim == data2.ndim
         return np.concatenate((data1, data2), axis=data1.ndim-1)
+
+
+class WindowFFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one windw, results are combined using average, min and max.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        self.nwindows = nwindows
+
+    def get_name(self):
+        return 'window-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                     self.scale_option, self.nwindows)
+
+    def apply(self, data):
+        window1avg = None
+        window2avg = None
+        window1min = None
+        window2min = None
+        window1max = None
+        window2max = None
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
+            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
+
+            if window1avg is None:
+                window1avg = window1min = window1max = window1
+                window2avg = window2min = window2max = window2
+            else:
+                window1avg += window1
+                window1min = np.minimum(window1min,window1)
+                window1max = np.maximum(window1max,window1)
+                window2avg += window2
+                window2min = np.minimum(window2min,window2)
+                window2max = np.maximum(window2max,window2)
+
+        window1avg /= self.nwindows
+        window2avg /= self.nwindows
+
+        if self.nwindows > 1:
+            return np.concatenate((window1avg, window1min, window1max, window2avg, window2min, window2max), axis=-1)
+        else:
+            return np.concatenate((window1avg, window2avg), axis=-1)
