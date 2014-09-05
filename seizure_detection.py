@@ -91,8 +91,8 @@ def run_seizure_detection(build_target, targets=None):
         # Pipeline(gen_ictal=False, pipeline=[WindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         #Pipeline(gen_ictal=False, pipeline=[StdWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         #Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
-        #Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
-        Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.5,0.9])]),
+        Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        #Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.5,0.9])]),
         # Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.1,0.9])]),
         # Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.05,0.5,0.95])]),
         # Pipeline(gen_ictal=False, pipeline=[BoxWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
@@ -281,12 +281,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.build == 'predict':
-        args.build == 'make_predictions'
+        args.build = 'make_predictions'
     elif args.build == 'train':
-        args.build == 'train_model'
+        args.build = 'train_model'
 
     assert args.build in ['train_data', 'test_data', 'cv', 'train_model', 'make_predictions'], \
-        'Illega/missing build command %s'%args.build
+        'Illegal/missing build command %s'%args.build
     assert len(args.targets), 'No target(s) were given'
 
     run_seizure_detection(args.build, targets=args.targets)
