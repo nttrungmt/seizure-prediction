@@ -5,7 +5,8 @@ from common import time
 from common.data import CachedDataLoader, makedirs
 from common.pipeline import Pipeline
 from seizure.transforms import FFT, Slice, Magnitude, Log10, FFTWithTimeFreqCorrelation, MFCC, Resample, Stats, \
-    DaubWaveletStats, TimeCorrelation, FreqCorrelation, TimeFreqCorrelation, WindowFFTWithTimeFreqCorrelation
+    DaubWaveletStats, TimeCorrelation, FreqCorrelation, TimeFreqCorrelation, \
+    WindowFFTWithTimeFreqCorrelation, StdWindowFFTWithTimeFreqCorrelation, MedianWindowFFTWithTimeFreqCorrelation
 from seizure.tasks import TaskCore, CrossValidationScoreTask, MakePredictionsTask, TrainClassifierTask
 import seizure.tasks
 from seizure.scores import get_score_summary, print_results
@@ -41,7 +42,8 @@ def run_seizure_detection(build_target):
     ts = time.get_millis()
 
     if seizure.tasks.task_predict:
-        # add the number of test examples for each target, assuming this is the relative weight in the leaderboard
+        # add leader-board weight to each target. I am using the number of test example as the weight assuming
+        # all test examples are weighted equally on the leader-board
         targets = [
             ('Dog_1',502),
             ('Dog_2',1000),
@@ -83,7 +85,9 @@ def run_seizure_detection(build_target):
         # Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'us')]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'us')]),
         #Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'usf')]), # winning detection submission
-        Pipeline(gen_ictal=False, pipeline=[WindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        # Pipeline(gen_ictal=False, pipeline=[WindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        Pipeline(gen_ictal=False, pipeline=[StdWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'usf')]), # higher score than winning submission
         # Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'none')]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'none')]),
@@ -106,14 +110,20 @@ def run_seizure_detection(build_target):
         # (RandomForestClassifier(n_estimators=50, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf50mss1Bfrs0'),
         # (RandomForestClassifier(n_estimators=150, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf150mss1Bfrs0'),
         # (RandomForestClassifier(n_estimators=300, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf300mss1Bfrs0'),
-        (RandomForestClassifier(n_estimators=3000, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf3000mss1Bfrs0'),
-        (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=10, bootstrap=True, n_jobs=-1, random_state=0), 'rf3000mss1md10Bt'),
+        # (RandomForestClassifier(n_estimators=3000, min_samples_split=1, bootstrap=False, n_jobs=4, random_state=0), 'rf3000mss1Bfrs0'),
+        # (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=10, bootstrap=True, n_jobs=-1, random_state=0), 'rf3000mss1md10Bt'),
+        # (RandomForestClassifier(n_estimators=1000, min_samples_split=1, max_depth=10, bootstrap=False, n_jobs=-1, random_state=0), 'rf3000mss1md10Bf'),
         (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=10, bootstrap=False, n_jobs=-1, random_state=0), 'rf3000mss1md10Bf'),
-        (GradientBoostingClassifier(n_estimators=500,min_samples_split=1,),'gbc500mss1'),
-        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0),'gbc1000mss1'),
-        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.03),'gbc1000mss1lr03'),
-        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.01),'gbc1000mss1lr01'),
-        (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.01, max_depth=1000),'gbc1000mss1lr01md1000'),
+        # (RandomForestClassifier(n_estimators=10000, min_samples_split=1, max_depth=10, bootstrap=False, n_jobs=-1, random_state=0), 'rf10000mss1md10Bf'),
+        # (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=3, bootstrap=False, n_jobs=-1, random_state=0), 'rf3000mss1md3Bf'),
+        # (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=30, bootstrap=False, n_jobs=-1, random_state=0), 'rf3000mss1md30Bf'),
+        # (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=10, max_features='log2', bootstrap=False, n_jobs=-1, random_state=0), 'rf3000mss1md10BfmfL2'),
+        # (RandomForestClassifier(n_estimators=3000, min_samples_split=1, max_depth=10, max_features=200, bootstrap=False, n_jobs=-1, random_state=0), 'rf3000mss1md10Bfmf200'),
+        # (GradientBoostingClassifier(n_estimators=500,min_samples_split=1,),'gbc500mss1'),
+        # (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0),'gbc1000mss1'),
+        # (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.03),'gbc1000mss1lr03'),
+        # (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.01),'gbc1000mss1lr01'),
+        # (GradientBoostingClassifier(n_estimators=1000,min_samples_split=1, random_state=0, learning_rate=0.01, max_depth=1000),'gbc1000mss1lr01md1000'),
    ]
     cv_ratio = 0.5
 

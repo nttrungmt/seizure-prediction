@@ -573,8 +573,12 @@ class WindowFFTWithTimeFreqCorrelation:
             window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
 
             if window1avg is None:
-                window1avg = window1min = window1max = window1
-                window2avg = window2min = window2max = window2
+                window1avg = np.copy(window1)
+                window1min = np.copy(window1)
+                window1max = np.copy(window1)
+                window2avg = np.copy(window2)
+                window2min = np.copy(window2)
+                window2max = np.copy(window2)
             else:
                 window1avg += window1
                 window1min = np.minimum(window1min,window1)
@@ -590,3 +594,104 @@ class WindowFFTWithTimeFreqCorrelation:
             return np.concatenate((window1avg, window1min, window1max, window2avg, window2min, window2max), axis=-1)
         else:
             return np.concatenate((window1avg, window2avg), axis=-1)
+
+class StdWindowFFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one windw, results are combined using average and std.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        self.nwindows = nwindows
+
+    def get_name(self):
+        return 'stdwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                     self.scale_option, self.nwindows)
+
+    def apply(self, data):
+        window1avg = None
+        window2avg = None
+        window1std = None
+        window2std = None
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
+            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
+
+            if window1avg is None:
+                window1avg = np.copy(window1)
+                window1std = window1 * window1
+                window2avg = np.copy(window2)
+                window2std = window2 * window2
+            else:
+                window1avg += window1
+                window2avg += window2
+                window1std += window1*window1
+                window2std += window2*window2
+
+        window1avg /= self.nwindows
+        window2avg /= self.nwindows
+        window1std = np.sqrt(window1std / self.nwindows - window1avg * window1avg)
+        window2std = np.sqrt(window2std / self.nwindows - window2avg * window2avg)
+
+
+        if self.nwindows > 1:
+            return np.concatenate((window1avg, window1std, window2avg, window2std), axis=-1)
+        else:
+            return np.concatenate((window1avg, window2avg), axis=-1)
+
+class MedianWindowFFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows
+
+    def get_name(self):
+        return 'medianwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                     self.scale_option, self.nwindows)
+
+    def apply(self, data):
+        windows1 = []
+        windows2 = []
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
+            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
+            windows1.append(window1)
+            windows2.append(window2)
+
+        windows1 = np.sort(np.array(windows1), axis=0)
+        windows2 = np.sort(np.array(windows2), axis=0)
+
+        p10 = int(0.1*self.nwindows)
+        p50 = int(0.5*self.nwindows)
+        p90 = int(0.9*self.nwindows)
+
+        if self.nwindows > 1:
+            return np.concatenate((windows1[p10,:], windows1[p50,:], windows1[p90,:],
+                                   windows2[p10,:], windows2[p50,:], windows2[p90,:]),
+                                  axis=-1)
+        else:
+            return np.concatenate((window1, window2), axis=-1)
