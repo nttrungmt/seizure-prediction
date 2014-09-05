@@ -60,7 +60,8 @@ class LoadPreictalDataTask(Task):
         return 'data_preictal_%s_%s' % (self.task_core.target, self.task_core.pipeline.get_name())
 
     def load_data(self):
-        return parse_input_data(self.task_core.data_dir, self.task_core.target, 'preictal', self.task_core.pipeline)
+        return parse_input_data(self.task_core.data_dir, self.task_core.target, 'preictal', self.task_core.pipeline,
+                                self.task_core.gen_ictal)
 
 class LoadTestDataTask(Task):
     """
@@ -196,7 +197,10 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                     if not key.startswith('_'):
                         break
                 data = segment[key]['data'][0,0]
-                sequence = segment[key]['sequence'][0,0][0,0]
+                if key.startswith('preictal'):
+                    sequence = segment[key]['sequence'][0,0][0,0]
+                else:
+                    sequence = None
             else:
                 data = segment['data']
                 sequence = None
@@ -242,7 +246,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                             return np.split(d, 2, axis=axis)
                         new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
                         X.append(pipeline.apply(new_data))
-                        y.append(y_value)
+                        y.append(0) # seizure
                     y.append(0) # seizure
                 else:
                     y.append(2) # no seizure

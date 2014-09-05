@@ -1,5 +1,6 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.68438 | submission1409931955461-rf3000mss1md10Bf_gen_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv |
 0.63495 | submission1409918444466-rf3000mss1md10Bf_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-0.5-0.9.csv |
 0.64803 | submission1409867618690-rf3000mss1md10Bf_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv | 
 0.64139 | submission1409858884505-rf3000mss1md10Bf_stdwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv |

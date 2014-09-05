@@ -92,6 +92,7 @@ def run_seizure_detection(build_target, targets=None):
         #Pipeline(gen_ictal=False, pipeline=[StdWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         #Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        #Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 50, 400, 'usf',600)]),
         #Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.5,0.9])]),
         # Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.1,0.9])]),
         # Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.05,0.5,0.95])]),
