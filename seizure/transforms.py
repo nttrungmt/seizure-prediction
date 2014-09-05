@@ -655,21 +655,25 @@ class MedianWindowFFTWithTimeFreqCorrelation:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
     """
-    def __init__(self, start, end, max_hz, scale_option, nwindows):
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None):
         self.start = start
         self.end = end
         self.max_hz = max_hz
         self.scale_option = scale_option
         assert nwindows > 0
         self.nwindows = nwindows
+        self.percentile = percentile
 
     def get_name(self):
-        return 'medianwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
-                                                                     self.scale_option, self.nwindows)
+        name = 'medianwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                         self.scale_option, self.nwindows)
+        if self.percentile is None:
+            return name
+        else:
+            return name + '-' + '-'.join(map(str,self.percentile))
 
     def apply(self, data):
-        windows1 = []
-        windows2 = []
+        windows = []
 
         istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
         for i in range(self.nwindows):
@@ -679,19 +683,66 @@ class MedianWindowFFTWithTimeFreqCorrelation:
 
             window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
             window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
-            windows1.append(window1)
-            windows2.append(window2)
+            windows.append(np.concatenate((window1,window2)))
 
-        windows1 = np.sort(np.array(windows1), axis=0)
-        windows2 = np.sort(np.array(windows2), axis=0)
+        windows = np.sort(np.array(windows), axis=0)
 
-        p10 = int(0.1*self.nwindows)
-        p50 = int(0.5*self.nwindows)
-        p90 = int(0.9*self.nwindows)
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+        return np.concatenate([windows[int(p*self.nwindows),:] for p in percentile], axis=-1)
 
-        if self.nwindows > 1:
-            return np.concatenate((windows1[p10,:], windows1[p50,:], windows1[p90,:],
-                                   windows2[p10,:], windows2[p50,:], windows2[p90,:]),
-                                  axis=-1)
-        else:
-            return np.concatenate((window1, window2), axis=-1)
+class BoxWindowFFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    the information from the windows is summarized into a box-plot
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        assert nwindows > 1
+        self.nwindows = nwindows
+
+    def get_name(self):
+        return 'boxwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                     self.scale_option, self.nwindows)
+
+    def apply(self, data):
+        windows = []
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
+            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
+            window = np.concatenate((window1,window2))
+            windows.append(window)
+
+        windows = np.sort(np.array(windows), axis=0)
+
+        q1 = windows[int(0.25*self.nwindows),:]
+        q2 = windows[int(0.5*self.nwindows),:]
+        q3 = windows[int(0.75*self.nwindows),:]
+
+        iqr = q3 - q1
+        h = q3 + 1.5*iqr
+        l = q1 - 1.5*iqr
+
+        mask_h = windows > h
+        n_high_outliers = np.sum(mask_h, axis=0)
+
+        mask_l = windows < l
+        n_low_outliers = np.sum(mask_l, axis=0)
+
+        windows[mask_h] = -np.inf
+        high_whiskers = windows.max(axis=0)
+
+        windows[mask_h | mask_l] = np.inf
+        low_whiskers = windows.min(axis=0)
+
+        return np.concatenate((n_low_outliers,low_whiskers,q1,q2,q3,high_whiskers,n_high_outliers),
+                              axis=-1)

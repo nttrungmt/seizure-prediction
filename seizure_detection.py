@@ -6,8 +6,10 @@ from common.data import CachedDataLoader, makedirs
 from common.pipeline import Pipeline
 from seizure.transforms import FFT, Slice, Magnitude, Log10, FFTWithTimeFreqCorrelation, MFCC, Resample, Stats, \
     DaubWaveletStats, TimeCorrelation, FreqCorrelation, TimeFreqCorrelation, \
-    WindowFFTWithTimeFreqCorrelation, StdWindowFFTWithTimeFreqCorrelation, MedianWindowFFTWithTimeFreqCorrelation
-from seizure.tasks import TaskCore, CrossValidationScoreTask, MakePredictionsTask, TrainClassifierTask
+    WindowFFTWithTimeFreqCorrelation, StdWindowFFTWithTimeFreqCorrelation, MedianWindowFFTWithTimeFreqCorrelation, \
+    BoxWindowFFTWithTimeFreqCorrelation
+from seizure.tasks import TaskCore, CrossValidationScoreTask, MakePredictionsTask, TrainClassifierTask, \
+    TrainingDataTask, LoadTestDataTask
 import seizure.tasks
 from seizure.scores import get_score_summary, print_results
 
@@ -19,7 +21,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
-def run_seizure_detection(build_target):
+def run_seizure_detection(build_target, targets=None):
     """
     The main entry point for running seizure-detection cross-validation and predictions.
     Directories from settings file are configured, classifiers are chosen, pipelines are
@@ -41,34 +43,35 @@ def run_seizure_detection(build_target):
 
     ts = time.get_millis()
 
-    if seizure.tasks.task_predict:
-        # add leader-board weight to each target. I am using the number of test example as the weight assuming
-        # all test examples are weighted equally on the leader-board
-        targets = [
-            ('Dog_1',502),
-            ('Dog_2',1000),
-            ('Dog_3',907),
-            ('Dog_4',990),
-            ('Dog_5',191),
-            ('Patient_1',195),
-            ('Patient_2',150),
-        ]
-    else:
-        targets = [
-            'Dog_1',
-            'Dog_2',
-            'Dog_3',
-            'Dog_4',
-            'Dog_5',
-            'Patient_1',
-            'Patient_2',
-            'Patient_3',
-            'Patient_4',
-            'Patient_5',
-            'Patient_6',
-            'Patient_7',
-            'Patient_8'
-        ]
+    if not targets:
+        if seizure.tasks.task_predict:
+            # add leader-board weight to each target. I am using the number of test example as the weight assuming
+            # all test examples are weighted equally on the leader-board
+            targets = [
+                ('Dog_1',502),
+                ('Dog_2',1000),
+                ('Dog_3',907),
+                ('Dog_4',990),
+                ('Dog_5',191),
+                ('Patient_1',195),
+                ('Patient_2',150),
+            ]
+        else:
+            targets = [
+                'Dog_1',
+                'Dog_2',
+                'Dog_3',
+                'Dog_4',
+                'Dog_5',
+                'Patient_1',
+                'Patient_2',
+                'Patient_3',
+                'Patient_4',
+                'Patient_5',
+                'Patient_6',
+                'Patient_7',
+                'Patient_8'
+            ]
 
     pipelines = [
         # NOTE(mike): you can enable multiple pipelines to run them all and compare results
@@ -86,8 +89,13 @@ def run_seizure_detection(build_target):
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'us')]),
         #Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'usf')]), # winning detection submission
         # Pipeline(gen_ictal=False, pipeline=[WindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
-        Pipeline(gen_ictal=False, pipeline=[StdWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
-        Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        #Pipeline(gen_ictal=False, pipeline=[StdWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        #Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        #Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.5,0.9])]),
+        # Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.1,0.9])]),
+        # Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.05,0.5,0.95])]),
+        # Pipeline(gen_ictal=False, pipeline=[BoxWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'usf')]), # higher score than winning submission
         # Pipeline(gen_ictal=False, pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'none')]),
         # Pipeline(gen_ictal=True,  pipeline=[FFTWithTimeFreqCorrelation(1, 48, 400, 'none')]),
@@ -219,7 +227,41 @@ def run_seizure_detection(build_target):
 
             print_results(summaries)
 
-    if build_target == 'cv':
+    def do_train_data():
+        for pipeline in pipelines:
+            print 'Using pipeline %s' % (pipeline.get_name())
+            for target in targets:
+                if isinstance(target,tuple):
+                    target, leaderboard_weight = target
+
+                task_core = TaskCore(cached_data_loader=cached_data_loader, data_dir=data_dir,
+                                     target=target, pipeline=pipeline,
+                                         classifier_name=None, classifier=None,
+                                         normalize=None, gen_ictal=None,
+                                         cv_ratio=None)
+
+                TrainingDataTask(task_core).run()
+
+    def do_test_data():
+        for pipeline in pipelines:
+            print 'Using pipeline %s' % (pipeline.get_name())
+            for target in targets:
+                if isinstance(target,tuple):
+                    target, leaderboard_weight = target
+
+                task_core = TaskCore(cached_data_loader=cached_data_loader, data_dir=data_dir,
+                                     target=target, pipeline=pipeline,
+                                         classifier_name=None, classifier=None,
+                                         normalize=None, gen_ictal=None,
+                                         cv_ratio=None)
+
+                LoadTestDataTask(task_core).run()
+
+    if build_target == 'train_data':
+        do_train_data()
+    elif build_target == 'test_data':
+        do_test_data()
+    elif build_target == 'cv':
         do_cross_validation()
     elif build_target == 'train_model':
         train_full_model(make_predictions=False)
@@ -227,3 +269,24 @@ def run_seizure_detection(build_target):
         train_full_model(make_predictions=True)
     else:
         raise Exception("unknown build target %s" % build_target)
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Seizure prediction or detection')
+    parser.add_argument('-b','--build',
+                       help='select what we want to build: train_data, test_data, cv, train_model, make_predictions')
+    parser.add_argument('-t', '--targets', nargs='+',
+                       help='Target file(s) we want to process')
+
+    args = parser.parse_args()
+    if args.build == 'predict':
+        args.build == 'make_predictions'
+    elif args.build == 'train':
+        args.build == 'train_model'
+
+    assert args.build in ['train_data', 'test_data', 'cv', 'train_model', 'make_predictions'], \
+        'Illega/missing build command %s'%args.build
+    assert len(args.targets), 'No target(s) were given'
+
+    run_seizure_detection(args.build, targets=args.targets)

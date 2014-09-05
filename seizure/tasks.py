@@ -188,6 +188,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
         latencies = []
 
         prev_data = None
+        prev_sequence = None
         prev_latency = None
         for segment in mat_data:
             if task_predict:
@@ -195,6 +196,10 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                     if not key.startswith('_'):
                         break
                 data = segment[key]['data'][0,0]
+                sequence = segment[key]['sequence'][0,0][0,0]
+            else:
+                data = segment['data']
+                sequence = None
             transformed_data = pipeline.apply(data)
 
             if with_latency:
@@ -226,12 +231,25 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
             elif y is not None:
                 # this is interictal
                 if key.startswith('preictal'):
+                    # generate extra preictal training data by taking 2nd half of previous
+                    # 10-min segment and first half of current segment
+                    # 0.5-1.5, 1.5-2.5, ..., 13.5-14.5, ..., 15.5-16.5
+                    # cannot take half of 15 and half of 16 because it cannot be strictly labelled as early or late
+                    if gen_ictal and prev_data is not None and prev_sequence+1 == sequence:
+                        # gen new data :)
+                        axis = prev_data.ndim - 1
+                        def split(d):
+                            return np.split(d, 2, axis=axis)
+                        new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
+                        X.append(pipeline.apply(new_data))
+                        y.append(y_value)
                     y.append(0) # seizure
                 else:
                     y.append(2) # no seizure
 
             X.append(transformed_data)
             prev_data = data
+            prev_sequence = sequence
 
         print '(%ds)' % (time.get_seconds() - start)
 

@@ -1,7 +1,7 @@
 # Seizure Detection & Prediction
 
 This repository is an attempt to solve the
-[American Epilepsy Society Seizure Prediction Challenge](](https://www.kaggle.com/c/seizure-prediction)
+[American Epilepsy Society Seizure Prediction Challenge](https://www.kaggle.com/c/seizure-prediction)
 on Kaggle.
 This repository started of from the [winning submission](https://github.com/MichaelHills/seizure-detection) for
 [UPenn and Mayo Clinic's Seizure Detection Challenge](http://www.kaggle.com/c/seizure-detection) on Kaggle.

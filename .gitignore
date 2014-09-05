@@ -61,3 +61,4 @@ data-cache
 notebooks/.ipynb_checkpoints/
 seizure-data
 submissions
+log/
