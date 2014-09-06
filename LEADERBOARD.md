@@ -1,5 +1,8 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.69653 | 140906-predict-direct.csv |
+0.68513 | 140906-predict.csv |
+0.70015 | submission1410030017145-rf3000mss1md10Bf_gen4_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv |
 0.69119 | submission1409949301043-rf3000mss1md10Bf_gen2_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv |
 0.68438 | submission1409931955461-rf3000mss1md10Bf_gen_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv |
 0.63495 | submission1409918444466-rf3000mss1md10Bf_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-0.5-0.9.csv |
