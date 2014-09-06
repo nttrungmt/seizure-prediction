@@ -12,7 +12,10 @@ class Pipeline(object):
         self.gen_ictal = gen_ictal
         names = [t.get_name() for t in self.transforms]
         if gen_ictal:
-            names = ['gen'] + names
+            if isinstance(gen_ictal,bool) or gen_ictal==1:
+                names = ['gen'] + names
+            else:
+                names = ['gen%d'%gen_ictal] + names
         self.name = 'empty' if len(names) == 0 else '_'.join(names)
 
     def get_name(self):

@@ -655,25 +655,30 @@ class MedianWindowFFTWithTimeFreqCorrelation:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
     """
-    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None):
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1):
         self.start = start
         self.end = end
         self.max_hz = max_hz
         self.scale_option = scale_option
         assert nwindows > 0
-        self.nwindows = nwindows
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
         self.percentile = percentile
 
     def get_name(self):
         name = 'medianwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
                                                                          self.scale_option, self.nwindows)
-        if self.percentile is None:
-            return name
-        else:
-            return name + '-' + '-'.join(map(str,self.percentile))
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
 
     def apply(self, data):
         windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
 
         istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
         for i in range(self.nwindows):
@@ -685,10 +690,17 @@ class MedianWindowFFTWithTimeFreqCorrelation:
             window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
             windows.append(np.concatenate((window1,window2)))
 
-        windows = np.sort(np.array(windows), axis=0)
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                sorted_windows = np.sort(np.array(windows), axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                windows = []
 
-        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
-        return np.concatenate([windows[int(p*self.nwindows),:] for p in percentile], axis=-1)
+        return features
 
 class BoxWindowFFTWithTimeFreqCorrelation:
     """

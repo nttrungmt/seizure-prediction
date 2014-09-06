@@ -240,13 +240,22 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                     # 0.5-1.5, 1.5-2.5, ..., 13.5-14.5, ..., 15.5-16.5
                     # cannot take half of 15 and half of 16 because it cannot be strictly labelled as early or late
                     if gen_ictal and prev_data is not None and prev_sequence+1 == sequence:
-                        # gen new data :)
-                        axis = prev_data.ndim - 1
-                        def split(d):
-                            return np.split(d, 2, axis=axis)
-                        new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
-                        X.append(pipeline.apply(new_data))
-                        y.append(0) # seizure
+                        if isinstance(gen_ictal,bool) or gen_ictal==1:
+                            # gen new data :)
+                            axis = prev_data.ndim - 1
+                            def split(d):
+                                return np.split(d, 2, axis=axis)
+                            new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
+                            X.append(pipeline.apply(new_data))
+                            y.append(0) # seizure
+                        else:
+                            n = data.shape[1]
+                            s = n / (gen_ictal + 1.)
+                            new_data = np.concatenate((prev_data, data), axis=-1)
+                            for i in range(1,gen_ictal+1):
+                                start = int(s*i)
+                                X.append(pipeline.apply(new_data[:,start:(start+n)]))
+                                y.append(0) # seizure
                     y.append(0) # seizure
                 else:
                     y.append(2) # no seizure
