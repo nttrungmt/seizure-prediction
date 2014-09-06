@@ -5,6 +5,7 @@ import scipy.io
 import common.time as time
 from sklearn import cross_validation, preprocessing
 from sklearn.metrics import roc_curve, auc
+from common.pipeline import Pipeline, UnionPipeline
 
 task_predict = False
 
@@ -24,56 +25,105 @@ class Task(object):
         raise NotImplementedError("Implement this")
 
     def run(self):
+        if isinstance(self.task_core.pipeline, UnionPipeline):
+            # dont cache the union (assume the components are already cached)
+            tc = self.task_core
+            transforms = tc.pipeline.transforms
+            gen_ictal = tc.pipeline.gen_ictal
+            features_union = None
+            for transform in transforms:
+                self.task_core = TaskCore(cached_data_loader=tc.cached_data_loader,
+                                          data_dir=tc.data_dir, target=tc.target,
+                                         pipeline=Pipeline(gen_ictal, [transform]),
+                                         classifier_name=tc.classifier_name, classifier=tc.classifier,
+                                         normalize=tc.normalize, gen_ictal=tc.gen_ictal, cv_ratio=tc.cv_ratio)
+                features = self.task_core.cached_data_loader.load(self.filename(), self.load_data)
+                if features_union is None:
+                    features_union = features
+                else:
+                    assert np.all(features.y == features_union.y)
+                    features_union.X = np.concatenate((features_union.X, features.X), axis=-1)
+            self.task_core = tc
+            return features_union
+        else:
+            return self.task_core.cached_data_loader.load(self.filename(), self.load_data)
+
+class Task(object):
+    """
+    A Task computes some work and outputs a dictionary which will be cached on disk.
+    If the work has been computed before and is present in the cache, the data will
+    simply be loaded from disk and will not be pre-computed.
+    """
+    def __init__(self, task_core):
+        self.task_core = task_core
+
+    def filename(self):
+        raise NotImplementedError("Implement this")
+
+    def run(self):
         return self.task_core.cached_data_loader.load(self.filename(), self.load_data)
 
+class LoadTask(Task):
+    def filename(self):
+        return 'data_%s_%s_%s' % (self.data_type, self.task_core.target, self.task_core.pipeline.get_name())
 
-class LoadIctalDataTask(Task):
+    def run(self):
+        if isinstance(self.task_core.pipeline, UnionPipeline):
+            # dont cache the union (assume the components are already cached)
+            tc = self.task_core
+            transforms = tc.pipeline.transforms
+            gen_ictal = tc.pipeline.gen_ictal
+            features_union = None
+            for transform in transforms:
+                self.task_core = TaskCore(cached_data_loader=tc.cached_data_loader,
+                                          data_dir=tc.data_dir, target=tc.target,
+                                         pipeline=Pipeline(gen_ictal, [transform]),
+                                         classifier_name=tc.classifier_name, classifier=tc.classifier,
+                                         normalize=tc.normalize, gen_ictal=tc.gen_ictal, cv_ratio=tc.cv_ratio)
+                features = self.task_core.cached_data_loader.load(self.filename(), self.load_data)
+                if features_union is None:
+                    features_union = features
+                else:
+                    assert np.all(features.y == features_union.y)
+                    features_union.X = np.concatenate((features_union.X, features.X), axis=-1)
+            self.task_core = tc
+            return features_union
+        else:
+            return self.task_core.cached_data_loader.load(self.filename(), self.load_data)
+
+    def load_data(self):
+        return parse_input_data(self.task_core.data_dir, self.task_core.target, self.data_type, self.task_core.pipeline,
+                           self.task_core.gen_ictal)
+
+class LoadIctalDataTask(LoadTask):
     """
     Load the ictal mat files 1 by 1, transform each 1-second segment through the pipeline
     and return data in the format {'X': X, 'Y': y, 'latencies': latencies}
     """
-    def filename(self):
-        return 'data_ictal_%s_%s' % (self.task_core.target, self.task_core.pipeline.get_name())
-
-    def load_data(self):
-        return parse_input_data(self.task_core.data_dir, self.task_core.target, 'ictal', self.task_core.pipeline,
-                           self.task_core.gen_ictal)
+    data_type = 'ictal'
 
 
-class LoadInterictalDataTask(Task):
+
+class LoadInterictalDataTask(LoadTask):
     """
     Load the interictal mat files 1 by 1, transform each 1-second segment through the pipeline
     and return data in the format {'X': X, 'Y': y}
     """
-    def filename(self):
-        return 'data_interictal_%s_%s' % (self.task_core.target, self.task_core.pipeline.get_name())
+    data_type = 'interictal'
 
-    def load_data(self):
-        return parse_input_data(self.task_core.data_dir, self.task_core.target, 'interictal', self.task_core.pipeline)
-
-class LoadPreictalDataTask(Task):
+class LoadPreictalDataTask(LoadTask):
     """
     Load the pre-ictal mat files 1 by 1, transform each 1-second segment through the pipeline
     and return data in the format {'X': X, 'Y': y}
     """
-    def filename(self):
-        return 'data_preictal_%s_%s' % (self.task_core.target, self.task_core.pipeline.get_name())
+    data_type = 'preictal'
 
-    def load_data(self):
-        return parse_input_data(self.task_core.data_dir, self.task_core.target, 'preictal', self.task_core.pipeline,
-                                self.task_core.gen_ictal)
-
-class LoadTestDataTask(Task):
+class LoadTestDataTask(LoadTask):
     """
     Load the test mat files 1 by 1, transform each 1-second segment through the pipeline
     and return data in the format {'X': X}
     """
-    def filename(self):
-        return 'data_test_%s_%s' % (self.task_core.target, self.task_core.pipeline.get_name())
-
-    def load_data(self):
-        return parse_input_data(self.task_core.data_dir, self.task_core.target, 'test', self.task_core.pipeline)
-
+    data_type = 'test'
 
 class TrainingDataTask(Task):
     """

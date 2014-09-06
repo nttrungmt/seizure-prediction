@@ -3,11 +3,8 @@ import os.path
 import numpy as np
 from common import time
 from common.data import CachedDataLoader, makedirs
-from common.pipeline import Pipeline
-from seizure.transforms import FFT, Slice, Magnitude, Log10, FFTWithTimeFreqCorrelation, MFCC, Resample, Stats, \
-    DaubWaveletStats, TimeCorrelation, FreqCorrelation, TimeFreqCorrelation, \
-    WindowFFTWithTimeFreqCorrelation, StdWindowFFTWithTimeFreqCorrelation, MedianWindowFFTWithTimeFreqCorrelation, \
-    BoxWindowFFTWithTimeFreqCorrelation
+from common.pipeline import *
+from seizure.transforms import *
 from seizure.tasks import TaskCore, CrossValidationScoreTask, MakePredictionsTask, TrainClassifierTask, \
     TrainingDataTask, LoadTestDataTask
 import seizure.tasks
@@ -75,7 +72,7 @@ def run_seizure_detection(build_target, targets=None):
 
     pipelines = [
         # NOTE(mike): you can enable multiple pipelines to run them all and compare results
-        # Pipeline(gen_ictal=False, pipeline=[FFT(), Slice(1, 48), Magnitude(), Log10()]),
+        #Pipeline(gen_ictal=False, pipeline=[FFT(), Slice(1, 48), Magnitude(), Log10()]),
         # Pipeline(gen_ictal=False, pipeline=[FFT(), Slice(1, 64), Magnitude(), Log10()]),
         # Pipeline(gen_ictal=False, pipeline=[FFT(), Slice(1, 96), Magnitude(), Log10()]),
         # Pipeline(gen_ictal=False, pipeline=[FFT(), Slice(1, 128), Magnitude(), Log10()]),
@@ -93,6 +90,9 @@ def run_seizure_detection(build_target, targets=None):
         #Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         #Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         Pipeline(gen_ictal=2, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        Pipeline(gen_ictal=2, pipeline=[Variance(nwindows=600)]),
+        UnionPipeline(gen_ictal=2, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600),
+                                               Variance(nwindows=600)]),
         #Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600, nunits=4)]),
         #Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 50, 400, 'usf',600)]),
         #Pipeline(gen_ictal=False, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600,[0.5,0.9])]),

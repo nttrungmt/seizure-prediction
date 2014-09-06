@@ -675,6 +675,12 @@ class MedianWindowFFTWithTimeFreqCorrelation:
         return name
 
     def apply(self, data):
+        """data[channels,samples]
+        split samples to nwindows
+        Downsample them to max_hz (400) samples
+        generate Time/Freq Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
         windows = []
         unit_skip = self.nwindows / self.nunits
         features = None
@@ -701,6 +707,46 @@ class MedianWindowFFTWithTimeFreqCorrelation:
                 windows = []
 
         return features
+
+class Variance:
+    def __init__(self, nwindows, percentile=None, nunits=1):
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+
+    def get_name(self):
+        name = 'variance-w%d' % (self.nwindows)
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            window = UnitScaleFeat().apply(window)
+            windows.append(window.var(axis=1))
+
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                sorted_windows = np.sort(np.array(windows), axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                windows = []
+
+        return features
+
 
 class BoxWindowFFTWithTimeFreqCorrelation:
     """
