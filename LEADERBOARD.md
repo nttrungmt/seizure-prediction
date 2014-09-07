@@ -1,9 +1,9 @@
 AUC | Submission | Comment
 --- | --- | ---
-0.64162 | 140907-predict-direct.2 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-hamming0 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
-0.63918 | 140907-predict-direct.1 | gen8_medianwindow-fft-with-time-freq-corr-1-96-r400-usf-w600-hamming n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
+0.64162 BUG | 140907-predict-direct.2 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-hamming0 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
+0.63918 BUG | 140907-predict-direct.1 | gen8_medianwindow-fft-with-time-freq-corr-1-96-r400-usf-w600-hamming n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.71775 | 140906-predict-direct.4 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=6000, min_samples_split=1, max_depth=10 bootstrap=False
-0.64970 | 140906-predict-direct.3 | gen16_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
+0.64970 BUG | 140906-predict-direct.3 | gen16_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.72043 | 140906-predict-direct.2 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.70520 | 140906-predict-direct-1 | gen4_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.69653 | 140906-predict-direct | gen4_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10

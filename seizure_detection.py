@@ -92,9 +92,9 @@ def run_seizure_detection(build_target, targets=None):
         # Pipeline(gen_ictal=2, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         Pipeline(gen_ictal=4, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
-        #Pipeline(gen_ictal=16, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
-        #Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 96, 400, 'usf',600, window='hamming')]),
-        # Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600, window='hamming2')]),
+        Pipeline(gen_ictal=16, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 96, 400, 'usf',600, window='hamming')]),
+        Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600, window='hamming2')]),
         Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600, window='hamming0')]),
         # Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600, window='square0')]),
         # Pipeline(gen_ictal=2, pipeline=[Variance(nwindows=600)]),
@@ -246,9 +246,9 @@ def run_seizure_detection(build_target, targets=None):
                 task_core = TaskCore(cached_data_loader=cached_data_loader, data_dir=data_dir,
                                      target=target, pipeline=pipeline,
                                          classifier_name=None, classifier=None,
-                                         normalize=None, gen_ictal=None,
+                                         normalize=None, gen_ictal=pipeline.gen_ictal,
                                          cv_ratio=None)
-
+                # call the load data tasks for positive and negative examples (ignore the merge of the two.)
                 TrainingDataTask(task_core).run()
 
     def do_test_data():
@@ -261,7 +261,7 @@ def run_seizure_detection(build_target, targets=None):
                 task_core = TaskCore(cached_data_loader=cached_data_loader, data_dir=data_dir,
                                      target=target, pipeline=pipeline,
                                          classifier_name=None, classifier=None,
-                                         normalize=None, gen_ictal=None,
+                                         normalize=None, gen_ictal=pipeline.gen_ictal,
                                          cv_ratio=None)
 
                 LoadTestDataTask(task_core).run()
