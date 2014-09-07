@@ -1,5 +1,7 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.71775 | 140906-predict-direct.4.csv | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv n_estimators=6000, min_samples_split=1, max_depth=10 bootstrap=False
+0.64970 | 140906-predict-direct.3.csv | gen16_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.72043 | 140906-predict-direct.2.csv | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.70520 | 140906-predict-direct-1.csv | gen4_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.69653 | 140906-predict-direct.csv | gen4_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600.csv n_estimators=3000, min_samples_split=1, max_depth=10

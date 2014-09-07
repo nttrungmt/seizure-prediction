@@ -91,7 +91,8 @@ def run_seizure_detection(build_target, targets=None):
         # Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         # Pipeline(gen_ictal=2, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         # Pipeline(gen_ictal=4, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
-        Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        #Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
+        Pipeline(gen_ictal=16, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         # Pipeline(gen_ictal=2, pipeline=[Variance(nwindows=600)]),
         # UnionPipeline(gen_ictal=2, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600),Variance(nwindows=600)]),
         #Pipeline(gen_ictal=True, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600, nunits=4)]),
@@ -288,9 +289,17 @@ if __name__ == "__main__":
         args.build = 'make_predictions'
     elif args.build == 'train':
         args.build = 'train_model'
+    elif args.build == 'td':
+        args.build = 'train_data'
+    elif args.build == 'tt':
+        args.build = 'test_data'
 
-    assert args.build in ['train_data', 'test_data', 'cv', 'train_model', 'make_predictions'], \
+    assert args.build in ['data', 'train_data', 'test_data', 'cv', 'train_model', 'make_predictions'], \
         'Illegal/missing build command %s'%args.build
     assert len(args.targets), 'No target(s) were given'
 
-    run_seizure_detection(args.build, targets=args.targets)
+    if args.build == 'data':
+        run_seizure_detection('train_data', targets=args.targets)
+        run_seizure_detection('test_data', targets=args.targets)
+    else:
+        run_seizure_detection(args.build, targets=args.targets)
