@@ -224,7 +224,8 @@ def load_mat_data(data_dir, target, component):
 # data_type is one of ('ictal', 'interictal', 'test')
 def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
     ictal = data_type == 'ictal'
-    interictal = data_type == 'interictal' or data_type == 'preictal'
+    preictal = data_type == 'preictal'
+    interictal = data_type == 'interictal'
 
     # create an iterator
     mat_data = load_mat_data(data_dir, target, data_type)
@@ -298,6 +299,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                             new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
                             X.append(pipeline.apply(new_data))
                             y.append(0) # seizure
+                            latencies.append(sequence-0.5)
                         else:
                             n = data.shape[1]
                             s = n / (gen_ictal + 1.)
@@ -306,7 +308,9 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                                 start = int(s*i)
                                 X.append(pipeline.apply(new_data[:,start:(start+n)]))
                                 y.append(0) # seizure
+                                latencies.append(sequence-1.+i/(gen_ictal+1.))
                     y.append(0) # seizure
+                    latencies.append(float(sequence))
                 else:
                     y.append(2) # no seizure
 
@@ -320,7 +324,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
         y = np.array(y)
         latencies = np.array(latencies)
 
-        if ictal:
+        if ictal or preictal:
             print 'X', X.shape, 'y', y.shape, 'latencies', latencies.shape
             return X, y, latencies
         elif interictal:

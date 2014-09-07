@@ -23,12 +23,34 @@ class FFT:
     """
     Apply Fast Fourier Transform to the last axis.
     """
+    def __init__(self, window=None):
+        self.window = window
+
     def get_name(self):
-        return "fft"
+        if self.window is not None:
+            return "fft-%s"%self.window
+        else:
+            return "fft"
 
     def apply(self, data):
-        axis = data.ndim - 1
-        return np.fft.rfft(data, axis=axis)
+        if self.window is None:
+            axis = data.ndim - 1
+            return np.fft.rfft(data, axis=axis)
+        nsamples = data.shape[-1]
+        if self.window.endswith('0'):
+            n = nsamples
+        else:
+            n = 2*nsamples
+        if self.window.startswith('hamming'):
+            res = np.fft.rfft(data*np.hamming(nsamples), n=n) # add zero padding
+        else:
+            res = np.fft.rfft(data, n=n) # add zero padding
+
+        if self.window.endswith('2'):
+            res = res[:,::2]
+        return res
+
+
 
 
 class Slice:
@@ -379,13 +401,14 @@ class FreqCorrelation:
 
     Features can be selected/omitted using the constructor arguments.
     """
-    def __init__(self, start, end, scale_option, with_fft=False, with_corr=True, with_eigen=True):
+    def __init__(self, start, end, scale_option, with_fft=False, with_corr=True, with_eigen=True, window='None'):
         self.start = start
         self.end = end
         self.scale_option = scale_option
         self.with_fft = with_fft
         self.with_corr = with_corr
         self.with_eigen = with_eigen
+        self.window = window
         assert scale_option in ('us', 'usf', 'none')
         assert with_corr or with_eigen
 
@@ -395,6 +418,8 @@ class FreqCorrelation:
             selections.append('nocorr')
         if not self.with_eigen:
             selections.append('noeig')
+        if self.window is not None:
+            selections.append(self.window)
         if len(selections) > 0:
             selection_str = '-' + '-'.join(selections)
         else:
@@ -403,7 +428,7 @@ class FreqCorrelation:
                                                    self.scale_option, selection_str)
 
     def apply(self, data):
-        data1 = FFT().apply(data)
+        data1 = FFT(self.window).apply(data)
         data1 = Slice(self.start, self.end).apply(data1)
         data1 = Magnitude().apply(data1)
         data1 = Log10().apply(data1)
@@ -655,7 +680,7 @@ class MedianWindowFFTWithTimeFreqCorrelation:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
     """
-    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1):
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1, window=None):
         self.start = start
         self.end = end
         self.max_hz = max_hz
@@ -664,10 +689,13 @@ class MedianWindowFFTWithTimeFreqCorrelation:
         self.nwindows = nwindows # data is divided into windows
         self.nunits = nunits # windows are grouped into units
         self.percentile = percentile
+        self.window = window
 
     def get_name(self):
         name = 'medianwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
                                                                          self.scale_option, self.nwindows)
+        if self.window is not None:
+            name += '-' + self.window
         if self.nunits != 1:
             name += '-u%d'%self.nunits
         if self.percentile is not None:
@@ -693,7 +721,7 @@ class MedianWindowFFTWithTimeFreqCorrelation:
                 window = Resample(self.max_hz).apply(window)
 
             window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
-            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(window)
+            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True, window=self.window).apply(window)
             windows.append(np.concatenate((window1,window2)))
 
             nw = len(windows)
