@@ -8,7 +8,7 @@ def load_hkl_file(filename):
     if os.path.isfile(hkl_filename):
         start = time.get_seconds()
         data = hkl.load(hkl_filename)
-        print 'Loaded %s in %ds' % (hkl_filename, time.get_seconds() - start)
+        #print 'Loaded %s in %ds' % (hkl_filename, time.get_seconds() - start)
         return data
     return None
 
