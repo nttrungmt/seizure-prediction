@@ -62,3 +62,5 @@ notebooks/.ipynb_checkpoints/
 seizure-data
 submissions
 log/
+
+.DS_Store
