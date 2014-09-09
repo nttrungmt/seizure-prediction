@@ -1,5 +1,7 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.71528 | submission1410201279897-rf3000mss1md10Bf_gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 |
+0.71523 | 140906-predict-direct.2.2 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False 
 0.68699 | 140907-predict.1 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.71601 | 140906-predict-direct.2.1 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
 0.70139 | 140907-predict-direct.2.1 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-hamming0 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False
