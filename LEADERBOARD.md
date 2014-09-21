@@ -1,5 +1,16 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.73234 | 140921-predict.4 | gen8_medianwindow-fft-with-time-freq-cov1-1-48-r400-usf-w600
+0.71853 | 140921-predict.3 | gen8_medianwindow-fft-with-time-freq-cov-1-100-r400-usf-w600
+0.73397 | 140921-predict.2 | gen8_medianwindow-fft-with-time-freq-cov-1-48-r400-usf-w600
+0.73853 | 140921-predict.1 | gen8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600
+0.70577 | 140919-predict.2 | gen8_cleancormedianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-hammingP2 n_estimators=10000
+0.70658 | 140919-predict.2 | gen8_cleancormedianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-hammingP2
+0.70117 | 140919-predict.1 | gen8_cleanmedianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600-hammingP2
+0.68399 | 140912-rank-calibrate-1 | 
+0.68224 | 140912-rank-calibrate-1 | BUG
+0.56332 | 140912-rank-calibrate | BUG
+0.71921 | 140906-predict-direct.2.3 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False | checkout 7f7b170919be34
 0.71528 | submission1410201279897-rf3000mss1md10Bf_gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 |
 0.71523 | 140906-predict-direct.2.2 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False 
 0.68699 | 140907-predict.1 | gen8_medianwindow-fft-with-time-freq-corr-1-48-r400-usf-w600 n_estimators=3000, min_samples_split=1, max_depth=10 bootstrap=False

@@ -1,4 +1,5 @@
 #!/bin/bash
+# D5 D1 D2 D4 D3 P1 P2
 echo $1
 rm log/*
 python seizure_detection.py -b $1 -t Dog_1 &> log/Dog_1 &

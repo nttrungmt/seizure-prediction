@@ -39,6 +39,10 @@ class FFT:
         nsamples = data.shape[-1]
         if self.window.endswith('0'):
             n = nsamples
+        elif self.window.endswith('P2'):
+            n = 512
+            while n/2 < nsamples:
+                n *= 2
         else:
             n = 2*nsamples
         if self.window.startswith('hamming'):
@@ -46,9 +50,17 @@ class FFT:
         else:
             res = np.fft.rfft(data, n=n) # add zero padding
 
-        if self.window.endswith('2'):
-            res = res[:,::2]
-        return res
+        # return to original frequencies
+        if n == nsamples:
+            return res
+
+        nf = res.shape[1]
+        nf_down = (nsamples//2)+1
+        res_down = np.empty((data.shape[0],nf_down), dtype=complex)
+        for i in range(nf_down):
+            j = (i*(nf-1))//(nf_down-1)
+            res_down[:,i] = res[:,j]
+        return res_down
 
 
 
@@ -401,7 +413,7 @@ class FreqCorrelation:
 
     Features can be selected/omitted using the constructor arguments.
     """
-    def __init__(self, start, end, scale_option, with_fft=False, with_corr=True, with_eigen=True,
+    def __init__(self, start, end, scale_option='none', with_fft=False, with_corr=True, with_eigen=True,
                  window='None', subsample=1):
         self.start = start
         self.end = end
@@ -481,7 +493,7 @@ class TimeCorrelation:
 
     Features can be selected/omitted using the constructor arguments.
     """
-    def __init__(self, max_hz, scale_option, with_corr=True, with_eigen=True):
+    def __init__(self, max_hz=0, scale_option='none', with_corr=True, with_eigen=True):
         self.max_hz = max_hz
         self.scale_option = scale_option
         self.with_corr = with_corr
@@ -508,7 +520,7 @@ class TimeCorrelation:
                 ch[-1] += 0.00001
 
         data1 = data
-        if data1.shape[1] > self.max_hz:
+        if self.max_hz and data1.shape[1] > self.max_hz:
             data1 = Resample(self.max_hz).apply(data1)
 
         if self.scale_option == 'usf':
@@ -538,7 +550,7 @@ class TimeFreqCorrelation:
     """
     Combines time and frequency correlation, taking both correlation coefficients and eigenvalues.
     """
-    def __init__(self, start, end, max_hz, scale_option):
+    def __init__(self, start, end, max_hz=0, scale_option=''):
         self.start = start
         self.end = end
         self.max_hz = max_hz
@@ -559,7 +571,7 @@ class FFTWithTimeFreqCorrelation:
     """
     Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
     """
-    def __init__(self, start, end, max_hz, scale_option):
+    def __init__(self, start, end, max_hz=0, scale_option=''):
         self.start = start
         self.end = end
         self.max_hz = max_hz
@@ -582,7 +594,7 @@ class WindowFFTWithTimeFreqCorrelation:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one windw, results are combined using average, min and max.
     """
-    def __init__(self, start, end, max_hz, scale_option, nwindows):
+    def __init__(self, start, end, max_hz=0, scale_option='', nwindows=1):
         self.start = start
         self.end = end
         self.max_hz = max_hz
@@ -852,3 +864,486 @@ class BoxWindowFFTWithTimeFreqCorrelation:
 
         return np.concatenate((n_low_outliers,low_whiskers,q1,q2,q3,high_whiskers,n_high_outliers),
                               axis=-1)
+
+class CleanMedianWindowFFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1, window=None,subsample=1):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.window = window
+        self.subsample = subsample
+
+    def get_name(self):
+        if self.subsample == 1:
+            name = 'cleanmedianwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        else:
+            name = 'cleanmedianwindow-fft-with-time-freq-corr-%d-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.subsample,
+                                                                                 self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        if self.window is not None:
+            name += '-' + self.window
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        split samples to nwindows
+        clean data from people from all harmonies of 60Hz and from DC
+        Downsample them to max_hz (400) samples
+        generate Time/Freq Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+
+        # we have two Fs 399 and 5000 but data_length_sec is always 600.
+        data_length_sec = 600.
+        nsamples = data.shape[1]
+        Fs = nsamples/data_length_sec
+
+        if Fs > 400: # clean only people data
+            # optimize speed by using power of 2
+            nfft = 8192
+            while nfft/2 < nsamples:
+                nfft *= 2
+
+            # notch filter
+            Y = np.fft.rfft(data*np.hamming(nsamples), n=nfft) # add zero padding
+            # find base frequency 60Hz
+            base = (60./Fs)*nfft
+            # clean
+            for harmony in range(1,10):
+                notch = int(base*harmony)
+                if notch > Y.shape[1]:
+                    break
+                Y[:,notch-1] = 0.
+                Y[:,notch] = 0.
+                Y[:,notch+1] = 0.
+            # remove DC
+            Y[:,0] = 0.
+
+            data = np.fft.irfft(Y,n=nfft)
+            data = data[:,:nsamples]
+
+        windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
+            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True, window=self.window,
+                                      subsample=self.subsample).apply(window)
+            windows.append(np.concatenate((window1,window2)))
+
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                sorted_windows = np.sort(np.array(windows), axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                windows = []
+
+        return features
+
+class CleanCorMedianWindowFFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1, window=None,subsample=1):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.window = window
+        self.subsample = subsample
+
+    def get_name(self):
+        if self.subsample == 1:
+            name = 'cleancormedianwindow-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        else:
+            name = 'cleancormedianwindow-fft-with-time-freq-corr-%d-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.subsample,
+                                                                                 self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        if self.window is not None:
+            name += '-' + self.window
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        split samples to nwindows
+        clean data from people from all harmonies of 60Hz and from DC
+        Downsample them to max_hz (400) samples
+        generate Time/Freq Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+
+        # we have two Fs 399 and 5000 but data_length_sec is always 600.
+        data_length_sec = 600.
+        nsamples = data.shape[1]
+        Fs = nsamples/data_length_sec
+
+        if Fs > 400: # clean only people data
+            # optimize speed by using power of 2
+            nfft = 8192
+            while nfft/2 < nsamples:
+                nfft *= 2
+
+            # notch filter
+            Y = np.fft.rfft(data*np.hamming(nsamples), n=nfft) # add zero padding
+            # find base frequency 60Hz
+            base = (60./Fs)*nfft
+            # clean
+            for harmony in range(1,10):
+                notch = int(base*harmony)
+                if notch > Y.shape[1]:
+                    break
+                Y[:,notch-1] = 0.
+                Y[:,notch] = 0.
+                Y[:,notch+1] = 0.
+            # remove DC
+            Y[:,0] = 0.
+
+            data = np.fft.irfft(Y,n=nfft)
+            data = data[:,:nsamples]
+
+        windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            window1 = TimeCorrelation(self.max_hz, self.scale_option).apply(window)
+            window2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True, window=self.window,
+                                      subsample=self.subsample).apply(window)
+            windows.append(np.concatenate((window1,window2)))
+
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                windows = np.array(windows)
+                sorted_windows = np.sort(windows, axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                score = windows.mean(axis=0)/windows.std(axis=0)
+                var = nw/(nw-1.)*(windows[:-1,:]*windows[1:,:]).sum(axis=0)/(windows*windows).sum(axis=0)
+                features = np.concatenate((features, score, var), axis=-1)
+                windows = []
+        return features
+
+class MedianWindow1FFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1, window=None,subsample=1):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.window = window
+        self.subsample = subsample
+
+    def get_name(self):
+        if self.subsample == 1:
+            name = 'medianwindow1-fft-with-time-freq-corr-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow1-fft-with-time-freq-corr-%d-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.subsample,
+                                                                                 self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        if self.window is not None:
+            name += '-' + self.window
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        split samples to nwindows
+        Downsample them to max_hz (400) samples
+        generate Time/Freq Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if self.max_hz and window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = TimeCorrelation().apply(window)
+            window2 = FreqCorrelation(self.start, self.end, with_fft=True, window=self.window,
+                                      subsample=self.subsample).apply(window)
+            windows.append(np.concatenate((window1,window2)))
+
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                sorted_windows = np.sort(np.array(windows), axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                windows = []
+
+        return features
+
+class MedianWindowFFTWithTimeFreqCov:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1, window=None,subsample=1):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.window = window
+        self.subsample = subsample
+
+    def get_name(self):
+        if self.subsample == 1:
+            name = 'medianwindow-fft-with-time-freq-cov-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow-fft-with-time-freq-cov-%d-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.subsample,
+                                                                                 self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        if self.window is not None:
+            name += '-' + self.window
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        split samples to nwindows
+        Downsample them to max_hz (400) samples
+        generate Time/Freq Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if self.max_hz and window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            out = []
+            ##############
+            # window2 = FreqCorrelation(self.start, self.end, with_fft=True, window=self.window,
+            #                           subsample=self.subsample).apply(window)
+            data_frq = FFT(self.window).apply(window)
+            data_frq[:,59:62] = 0.
+            data_frq_slice = Slice(self.start, self.end).apply(data_frq)
+            data_power = Magnitude().apply(data_frq_slice)
+            data_power = Log10().apply(data_power)
+
+            data2 = CorrelationMatrix().apply(data_power)
+
+            out.append(upper_right_triangle(data2))
+            out.append(Eigenvalues().apply(data2))
+
+            out.append(data_power.ravel())
+
+            ##############
+            # window1 = TimeCorrelation().apply(window)
+
+            data_frq[:,:self.start] = 0.
+            data_frq[:,self.end:] = 0.
+            filtered_window =  np.fft.irfft(data_frq)
+
+            data1 = CorrelationMatrix().apply(filtered_window)
+
+            out.append(upper_right_triangle(data1))
+
+            out.append(Eigenvalues().apply(data1))
+
+            ##############
+
+            out = np.concatenate(out, axis=0)
+            windows.append(out)
+
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                sorted_windows = np.sort(np.array(windows), axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                windows = []
+
+        return features
+
+class MedianWindowFFTWithTimeFreqCov1:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, start, end, max_hz, scale_option, nwindows, percentile=None, nunits=1, window=None,subsample=1):
+        self.start = start
+        self.end = end
+        self.max_hz = max_hz
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.window = window
+        self.subsample = subsample
+
+    def get_name(self):
+        if self.subsample == 1:
+            name = 'medianwindow-fft-with-time-freq-cov1-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow-fft-with-time-freq-cov1-%d-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.subsample,
+                                                                                 self.max_hz,
+                                                                             self.scale_option, self.nwindows)
+        if self.window is not None:
+            name += '-' + self.window
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        split samples to nwindows
+        Downsample them to max_hz (400) samples
+        generate Time/Freq Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+            if self.max_hz and window.shape[1] > self.max_hz:
+                window = Resample(self.max_hz).apply(window)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            out = []
+            ##############
+            # window2 = FreqCorrelation(self.start, self.end, with_fft=True, window=self.window,
+            #                           subsample=self.subsample).apply(window)
+            data_frq = FFT(self.window).apply(window)
+            data_power = Log10().apply(Magnitude().apply(Slice(self.start, self.end).apply(data_frq)))
+
+            data2 = CorrelationMatrix().apply(data_power)
+
+            out.append(upper_right_triangle(data2))
+            out.append(Eigenvalues().apply(data2))
+
+            out.append(data_power.ravel())
+
+            ##############
+            # window1 = TimeCorrelation().apply(window)
+            data_frq[:,59:62] = 0.
+
+            # data_frq[:,:self.start] = 0.
+            # data_frq[:,self.end:] = 0.
+            filtered_window =  np.fft.irfft(data_frq)
+
+            data1 = CorrelationMatrix().apply(filtered_window)
+
+            out.append(upper_right_triangle(data1))
+
+            out.append(Eigenvalues().apply(data1))
+
+            ##############
+
+            out = np.concatenate(out, axis=0)
+            windows.append(out)
+
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                sorted_windows = np.sort(np.array(windows), axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                windows = []
+
+        return features
