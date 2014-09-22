@@ -1,5 +1,6 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.73270 | 140921-predict.5 | gen8_medianwindow-fft-with-time-freq-cov2-1-48-r400-usf-w600
 0.73234 | 140921-predict.4 | gen8_medianwindow-fft-with-time-freq-cov1-1-48-r400-usf-w600
 0.71853 | 140921-predict.3 | gen8_medianwindow-fft-with-time-freq-cov-1-100-r400-usf-w600
 0.73397 | 140921-predict.2 | gen8_medianwindow-fft-with-time-freq-cov-1-48-r400-usf-w600

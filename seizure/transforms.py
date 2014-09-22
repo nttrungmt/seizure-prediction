@@ -1246,7 +1246,7 @@ class MedianWindowFFTWithTimeFreqCov:
 
         return features
 
-class MedianWindowFFTWithTimeFreqCov1:
+class MedianWindowFFTWithTimeFreqCov2:
     """
     Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
     The above is performed on windows which is resmapled to max_hz
@@ -1266,10 +1266,10 @@ class MedianWindowFFTWithTimeFreqCov1:
 
     def get_name(self):
         if self.subsample == 1:
-            name = 'medianwindow-fft-with-time-freq-cov1-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
+            name = 'medianwindow-fft-with-time-freq-cov2-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.max_hz,
                                                                              self.scale_option, self.nwindows)
         else:
-            name = 'medianwindow-fft-with-time-freq-cov1-%d-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.subsample,
+            name = 'medianwindow-fft-with-time-freq-cov2-%d-%d-%d-r%d-%s-w%d' % (self.start, self.end, self.subsample,
                                                                                  self.max_hz,
                                                                              self.scale_option, self.nwindows)
         if self.window is not None:
@@ -1295,7 +1295,8 @@ class MedianWindowFFTWithTimeFreqCov1:
         istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
         for i in range(self.nwindows):
             window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
-            if self.max_hz and window.shape[1] > self.max_hz:
+            resample = self.max_hz and window.shape[1] > self.max_hz
+            if resample:
                 window = Resample(self.max_hz).apply(window)
 
             if self.scale_option == 'usf':
@@ -1319,11 +1320,12 @@ class MedianWindowFFTWithTimeFreqCov1:
 
             ##############
             # window1 = TimeCorrelation().apply(window)
-            data_frq[:,59:62] = 0.
+            if resample:
+                data_frq[:,60] = 0.
 
             # data_frq[:,:self.start] = 0.
             # data_frq[:,self.end:] = 0.
-            filtered_window =  np.fft.irfft(data_frq)
+            filtered_window =  np.fft.irfft(data_frq, window.shape[1])
 
             data1 = CorrelationMatrix().apply(filtered_window)
 
