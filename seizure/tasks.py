@@ -291,24 +291,55 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                     # 0.5-1.5, 1.5-2.5, ..., 13.5-14.5, ..., 15.5-16.5
                     # cannot take half of 15 and half of 16 because it cannot be strictly labelled as early or late
                     if gen_ictal and prev_data is not None and prev_sequence+1 == sequence:
-                        if isinstance(gen_ictal,bool) or gen_ictal==1:
-                            # gen new data :)
-                            axis = prev_data.ndim - 1
-                            def split(d):
-                                return np.split(d, 2, axis=axis)
-                            new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
-                            X.append(pipeline.apply(new_data))
-                            y.append(0) # seizure
-                            latencies.append(sequence-0.5)
-                        else:
-                            n = data.shape[1]
-                            s = n / (gen_ictal + 1.)
+                        if isinstance(gen_ictal,bool) or gen_ictal > 0:
+                            ng = int(gen_ictal)
                             new_data = np.concatenate((prev_data, data), axis=-1)
-                            for i in range(1,gen_ictal+1):
-                                start = int(s*i)
-                                X.append(pipeline.apply(new_data[:,start:(start+n)]))
-                                y.append(0) # seizure
-                                latencies.append(sequence-1.+i/(gen_ictal+1.))
+                        else:
+                            # see 140922-signal-crosscorelation
+                            # it looks like each segment was scaled to have DC=0
+                            # however different segments will be scaled differently
+                            # as result you can't concatenate sequential segments
+                            # without undoing the relative offset
+                            ng = -gen_ictal
+                            # import scipy.signal
+                            # # we want to filter the samples so as to not be sensitive to change in the signal itself
+                            # # over the distance of one sample (1/Fs). Taking 100 samples sounds safe enough.
+                            # normal_cutoff = 2./100. # 1/100*Fs in Hz
+                            # order = 6
+                            # b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
+                            # # use filtfilt to get zero phase http://wiki.scipy.org/Cookbook/FiltFilt
+                            # W1 = 5000
+                            # x1 = scipy.signal.filtfilt(b, a, prev_data[:,-W1:])
+                            # # we want the first sample of data after fitering so we will run it backward through
+                            # # the filter
+                            # x2 = scipy.signal.filtfilt(b, a, data[:,W1-1::-1])
+                            # # the first sample of data should be about the same as the last sample of prev_data
+                            # data_offset = x2[:,-1] - x1[:,-1]
+                            if data.shape[1] > 5*60*5000: # only Patients need offset correction
+                                data_offset = data[:,0] - prev_data[:,-1]
+                                data -= data_offset.reshape(-1,1)
+                            new_data = np.concatenate((prev_data, data), axis=-1)
+
+                        # jump = np.mean(np.abs(prev_data[:,-1]-data[:,0])*2./(np.std(prev_data[:,-4000:],axis=-1)+np.std(data[:,:4000],axis=-1)))
+                        # if jump < 0.7:
+                        # if ng==1:
+                        #     # gen new data :)
+                        #     axis = prev_data.ndim - 1
+                        #     def split(d):
+                        #         return np.split(d, 2, axis=axis)
+                        #     new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
+                        #     X.append(pipeline.apply(new_data))
+                        #     y.append(0) # seizure
+                        #     latencies.append(sequence-0.5)
+                        # else:
+                        n = data.shape[1]
+                        s = n / (ng + 1.)
+                        # new_data = np.concatenate((prev_data, data), axis=-1)
+                        for i in range(1,ng+1):
+                            start = int(s*i)
+                            X.append(pipeline.apply(new_data[:,start:(start+n)]))
+                            y.append(0) # seizure
+                            latencies.append(sequence-1.+i/(ng+1.))
                     y.append(0) # seizure
                     latencies.append(float(sequence))
                 else:

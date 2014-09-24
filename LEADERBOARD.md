@@ -1,5 +1,17 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.74706 | 140924-predict.1 | gen-8_medianwindow-bands-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
+0.72947 | 140923-predict.3 | gen-8_medianwindow2-fft-with-time-freq-corr-2-480-usf-w60
+0.73730 | 140923-predict.2 | gen-8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=0 patient jump
+0.67886 | 140923-predict.1 | gen-8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=0 normal_cutoff = 0.02
+0.73781 | 140922-predict.8 | gen8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=0
+0.73779 | 140922-predict.7 | gen8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=1
+0.73235 | 140922-predict.6 | gen8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=1 jump < 0.7
+0.72977 | 140922-predict.5 | gen8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=0 jump < 0.7
+0.72624 | 140922-predict.4 | gen8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=4
+0.73025 | 140922-predict.3 | medianwindow1-fft-with-time-freq-corr-1-49-r400-usf-w600 PWEIGHT=16
+0.66442 | 140922-predict.2 | medianwindow1-fft-with-time-freq-corr-1-49-r400-usf-w600 PWEIGHT=0
+0.72538 | 140922-predict.1 | medianwindow1-fft-with-time-freq-corr-1-49-r400-usf-w600 PWEIGHT=8
 0.73270 | 140921-predict.5 | gen8_medianwindow-fft-with-time-freq-cov2-1-48-r400-usf-w600
 0.73234 | 140921-predict.4 | gen8_medianwindow-fft-with-time-freq-cov1-1-48-r400-usf-w600
 0.71853 | 140921-predict.3 | gen8_medianwindow-fft-with-time-freq-cov-1-100-r400-usf-w600

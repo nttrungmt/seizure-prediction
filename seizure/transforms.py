@@ -82,6 +82,26 @@ class Slice:
         s[-1] = slice(self.start, self.end)
         return data[s]
 
+class Band:
+    """
+    Take a slice of the data on the last axis.
+    e.g. Slice(1, 48) works like a normal python slice, that is 1-47 will be taken
+    """
+    def __init__(self, bands, Fs=399.61):
+        self.bands = bands
+        self.Fs = Fs
+
+    def get_name(self):
+        return 'band-' + '-b'.join(map(str,self.bands))
+
+    def apply(self, data):
+        res = np.empty((data.shape[0],len(self.bands)-1))
+        for i,(s,e) in enumerate(zip(self.bands[:-1],self.bands[1:])):
+            nyq = (self.Fs/2.)/(data.shape[1]-1)
+            istart = int(s/nyq + 0.5)
+            iend = int(e/nyq + 0.5)
+            res[:,i] = data[:,istart:iend].sum(axis=-1)
+        return res
 
 class LPF:
     """
@@ -457,6 +477,112 @@ class FreqCorrelation:
                 r.append(data1[:,i:(i+self.subsample)].mean(axis=-1))
             r = np.vstack(r).T
             data1 = r
+
+        data2 = data1
+        if self.scale_option == 'usf':
+            data2 = UnitScaleFeat().apply(data2)
+        elif self.scale_option == 'us':
+            data2 = UnitScale().apply(data2)
+
+        data2 = CorrelationMatrix().apply(data2)
+
+        if self.with_eigen:
+            w = Eigenvalues().apply(data2)
+
+        out = []
+        if self.with_corr:
+            data2 = upper_right_triangle(data2)
+            out.append(data2)
+        if self.with_eigen:
+            out.append(w)
+        if self.with_fft:
+            data1 = data1.ravel()
+            out.append(data1)
+        for d in out:
+            assert d.ndim == 1
+
+        return np.concatenate(out, axis=0)
+
+class Bands:
+    """
+    Correlation in the frequency domain. First take FFT with (start, end) slice options,
+    then calculate correlation co-efficients on the FFT output, followed by calculating
+    eigenvalues on the correlation co-efficients matrix.
+
+    The output features are (fft, upper_right_diagonal(correlation_coefficients), eigenvalues)
+
+    Features can be selected/omitted using the constructor arguments.
+    """
+    def __init__(self, bands, scale_option='none',
+                 window='None'):
+        self.bands = bands
+        self.scale_option = scale_option
+        self.window = window
+        assert scale_option in ('us', 'usf', 'none')
+
+    def get_name(self):
+        selections = []
+        if self.window is not None:
+            selections.append(self.window)
+        if len(selections) > 0:
+            selection_str = '-' + '-'.join(selections)
+        else:
+            selection_str = ''
+        name = 'bands-%s-%s%s' % (self.scale_option, selection_str)
+        name += '-' + '-b'.join(map(str,self.bands))
+        return name
+
+    def apply(self, data):
+        data1 = FFT(self.window).apply(data)
+        data1 = Magnitude().apply(data1)
+        data1 = Band(self.bands).apply(data1)
+        data1 = Log10().apply(data1)
+        return data1.ravel()
+
+
+class BandsCorrelation:
+    """
+    Correlation in the frequency domain. First take FFT with (start, end) slice options,
+    then calculate correlation co-efficients on the FFT output, followed by calculating
+    eigenvalues on the correlation co-efficients matrix.
+
+    The output features are (fft, upper_right_diagonal(correlation_coefficients), eigenvalues)
+
+    Features can be selected/omitted using the constructor arguments.
+    """
+    def __init__(self, bands, scale_option='none', with_fft=False, with_corr=True, with_eigen=True,
+                 window='None'):
+        self.bands = bands
+        self.scale_option = scale_option
+        self.with_fft = with_fft
+        self.with_corr = with_corr
+        self.with_eigen = with_eigen
+        self.window = window
+        assert scale_option in ('us', 'usf', 'none')
+        assert with_corr or with_eigen
+
+    def get_name(self):
+        selections = []
+        if not self.with_corr:
+            selections.append('nocorr')
+        if not self.with_eigen:
+            selections.append('noeig')
+        if self.window is not None:
+            selections.append(self.window)
+        if len(selections) > 0:
+            selection_str = '-' + '-'.join(selections)
+        else:
+            selection_str = ''
+        name = 'bands-correlation-%s-%s%s' % ('withfft' if self.with_fft else 'nofft',
+                                                   self.scale_option, selection_str)
+        name += '-' + '-b'.join(map(str,self.bands))
+        return name
+
+    def apply(self, data):
+        data1 = FFT(self.window).apply(data)
+        data1 = Magnitude().apply(data1)
+        data1 = Band(self.bands).apply(data1)
+        data1 = Log10().apply(data1)
 
         data2 = data1
         if self.scale_option == 'usf':
@@ -1349,3 +1475,190 @@ class MedianWindowFFTWithTimeFreqCov2:
                 windows = []
 
         return features
+
+"""
+partitioned into non-overlapping 1-minute blocks, each block Fourier transformed, and
+the resulting power spectrum (0.1-200 Hz) is divided into 6 frequency bands:
+delta 0.1-4, theta 4-8, alpha 8-12, beta 12-30, low-gamma 30-70, and high-gamma 70-180.
+Within each frequency band the power was summed over band frequencies to produce a power-in-band (PIB) feature.
+These features were aggregated into a feature vector containing 96 PIB values (16 channels * 6 bands)
+"""
+class MedianWindow2FFTWithTimeFreqCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, start, end, scale_option, nwindows, percentile=None, nunits=1, window=None,subsample=1):
+        self.start = start
+        self.end = end
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.window = window
+        self.subsample = subsample
+
+    def get_name(self):
+        if self.subsample == 1:
+            name = 'medianwindow2-fft-with-time-freq-corr-%d-%d-%s-w%d' % (self.start, self.end,
+                                                                             self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow2-fft-with-time-freq-corr-%d-%d-%d-%s-w%d' % (self.start, self.end, self.subsample,
+                                                                             self.scale_option, self.nwindows)
+        if self.window is not None:
+            name += '-' + self.window
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        split samples to nwindows
+        Downsample them to max_hz (400) samples
+        generate Time/Freq Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            data = resample(data, 239766, axis=-1)
+        windows = []
+        unit_skip = self.nwindows / self.nunits
+        features = None
+        percentile = [0.1,0.5,0.9] if self.percentile is None else self.percentile
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = TimeCorrelation().apply(window)
+            window2 = FreqCorrelation(self.start, self.end, with_fft=True, window=self.window,
+                                      subsample=self.subsample).apply(window)
+            windows.append(np.concatenate((window1,window2)))
+
+            nw = len(windows)
+            if nw >= unit_skip or i == self.nwindows-1:
+                sorted_windows = np.sort(np.array(windows), axis=0)
+                unit_features = np.concatenate([sorted_windows[int(p*nw),:] for p in percentile], axis=-1)
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+                windows = []
+
+        return features
+
+"""
+partitioned into non-overlapping 1-minute blocks, each block Fourier transformed, and
+the resulting power spectrum (0.1-200 Hz) is divided into 6 frequency bands:
+delta 0.1-4, theta 4-8, alpha 8-12, beta 12-30, low-gamma 30-70, and high-gamma 70-180.
+Within each frequency band the power was summed over band frequencies to produce a power-in-band (PIB) feature.
+These features were aggregated into a feature vector containing 96 PIB values (16 channels * 6 bands)
+"""
+class MedianWindowBands:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70]):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.percentile = percentile
+        self.bands = bands
+
+    def get_name(self):
+        name = 'medianwindow-bands-%s-w%d' % (self.scale_option, self.nwindows)
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            def mynotch(fftfreq, notchfreq=60., notchwidth=1., Fs=5000.):
+                return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
+            data = resample(data, 239766, axis=-1, window=mynotch)
+        windows = []
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = Bands(self.bands).apply(window)
+            windows.append(window1)
+
+        sorted_windows = np.sort(np.array(windows), axis=0)
+        features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+
+        return features
+
+class MedianWindowBandsCorrelation:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70]):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.percentile = percentile
+        self.bands = bands
+
+    def get_name(self):
+        name = 'medianwindow-bandscorr-%s-w%d' % (self.scale_option, self.nwindows)
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            def mynotch(fftfreq, notchfreq=60., notchwidth=1., Fs=5000.):
+                return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
+            data = resample(data, 239766, axis=-1, window=mynotch)
+        windows = []
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = BandsCorrelation(self.bands,with_fft=True).apply(window)
+            windows.append(window1)
+
+        sorted_windows = np.sort(np.array(windows), axis=0)
+        features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+
+        return features
+
