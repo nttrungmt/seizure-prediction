@@ -248,10 +248,10 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                     if not key.startswith('_'):
                         break
                 data = segment[key]['data'][0,0]
-                if key.startswith('preictal'):
-                    sequence = segment[key]['sequence'][0,0][0,0]
-                else:
-                    sequence = None
+                # if key.startswith('preictal'):
+                sequence = segment[key]['sequence'][0,0][0,0]
+                # else:
+                #     sequence = None
             else:
                 data = segment['data']
                 sequence = None
@@ -285,7 +285,8 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                 prev_latency = latency
             elif y is not None:
                 # this is interictal
-                if key.startswith('preictal'):
+                label = 0 if key.startswith('preictal') else 2
+                if key.startswith('preictal') or key.startswith('interictal'):
                     # generate extra preictal training data by taking 2nd half of previous
                     # 10-min segment and first half of current segment
                     # 0.5-1.5, 1.5-2.5, ..., 13.5-14.5, ..., 15.5-16.5
@@ -316,7 +317,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                             # # the first sample of data should be about the same as the last sample of prev_data
                             # data_offset = x2[:,-1] - x1[:,-1]
                             if data.shape[1] > 5*60*5000: # only Patients need offset correction
-                                data_offset = data[:,0] - prev_data[:,-1]
+                                data_offset = data[:,0:10].mean(axis=-1) - prev_data[:,-10:].mean(axis=-1)
                                 data -= data_offset.reshape(-1,1)
                             new_data = np.concatenate((prev_data, data), axis=-1)
 
@@ -338,12 +339,12 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                         for i in range(1,ng+1):
                             start = int(s*i)
                             X.append(pipeline.apply(new_data[:,start:(start+n)]))
-                            y.append(0) # seizure
+                            y.append(label) # seizure
                             latencies.append(sequence-1.+i/(ng+1.))
-                    y.append(0) # seizure
+                    y.append(label) # seizure
                     latencies.append(float(sequence))
                 else:
-                    y.append(2) # no seizure
+                    y.append(label) # no seizure
 
             X.append(transformed_data)
             prev_data = data
@@ -355,12 +356,12 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
         y = np.array(y)
         latencies = np.array(latencies)
 
-        if ictal or preictal:
+        if ictal or preictal or interictal:
             print 'X', X.shape, 'y', y.shape, 'latencies', latencies.shape
             return X, y, latencies
-        elif interictal:
-            print 'X', X.shape, 'y', y.shape
-            return X, y
+        # elif interictal:
+        #     print 'X', X.shape, 'y', y.shape
+        #     return X, y
         else:
             print 'X', X.shape
             return X
