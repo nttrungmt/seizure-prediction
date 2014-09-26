@@ -1,5 +1,6 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.75037 | 140924-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
 0.74706 | 140924-predict.1 | gen-8_medianwindow-bands-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
 0.72947 | 140923-predict.3 | gen-8_medianwindow2-fft-with-time-freq-corr-2-480-usf-w60
 0.73730 | 140923-predict.2 | gen-8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=0 patient jump

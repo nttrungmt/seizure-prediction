@@ -7,7 +7,7 @@ from sklearn import cross_validation, preprocessing
 from sklearn.metrics import roc_curve, auc
 from common.pipeline import Pipeline, UnionPipeline
 
-task_predict = False
+task_predict = False # flag between the two kaggle competitons seizure detection (False) and seizure prediction (True)
 
 TaskCore = namedtuple('TaskCore', ['cached_data_loader', 'data_dir', 'target', 'pipeline', 'classifier_name',
                                    'classifier', 'normalize', 'gen_ictal', 'cv_ratio'])
@@ -248,10 +248,10 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                     if not key.startswith('_'):
                         break
                 data = segment[key]['data'][0,0]
-                # if key.startswith('preictal'):
-                sequence = segment[key]['sequence'][0,0][0,0]
-                # else:
-                #     sequence = None
+                if key.startswith('preictal') or key.startswith('interictal'):
+                    sequence = segment[key]['sequence'][0,0][0,0]
+                else:
+                    sequence = None
             else:
                 data = segment['data']
                 sequence = None
@@ -286,7 +286,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
             elif y is not None:
                 # this is interictal
                 label = 0 if key.startswith('preictal') else 2
-                if key.startswith('preictal') or key.startswith('interictal'):
+                if key.startswith('preictal'): # or key.startswith('interictal'):
                     # generate extra preictal training data by taking 2nd half of previous
                     # 10-min segment and first half of current segment
                     # 0.5-1.5, 1.5-2.5, ..., 13.5-14.5, ..., 15.5-16.5
