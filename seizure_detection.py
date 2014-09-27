@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import json
 import os.path
 import numpy as np
@@ -94,7 +97,8 @@ def run_seizure_detection(build_target, targets=None):
         #Pipeline(gen_ictal=8, pipeline=[MedianWindowFFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         # Pipeline(gen_ictal=-8, pipeline=[MedianWindow1FFTWithTimeFreqCorrelation(1, 48, 400, 'usf',600)]),
         #Pipeline(gen_ictal=-8, pipeline=[MedianWindowBands('usf', 60)]),
-        Pipeline(gen_ictal=-8, pipeline=[MedianWindowBands('usf', 60, p=2)]),
+        Pipeline(gen_ictal=-8, pipeline=[MedianWindowBands('usf', 10, p=2, window='hammingP2')]),
+        #Pipeline(gen_ictal=-8, pipeline=[MedianWindowBandsI('usf', 60, p=2)]),
         #Pipeline(gen_ictal=-8, pipeline=[MedianWindowBandsTimeCorrelation('usf', 60)]),
         #Pipeline(gen_ictal=-8, pipeline=[MedianWindowBandsCorrelation('usf', 60)]),
         # Pipeline(gen_ictal=-8, pipeline=[MedianWindowTimeCorrelation('usf', 60)]),

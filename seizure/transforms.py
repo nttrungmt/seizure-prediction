@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import numpy as np
 from scipy import signal
 from scipy.signal import resample, hann
@@ -546,7 +549,7 @@ class Bands:
     Features can be selected/omitted using the constructor arguments.
     """
     def __init__(self, bands, scale_option='none',
-                 window='None',p=1):
+                 window=None,p=1):
         self.bands = bands
         self.scale_option = scale_option
         self.window = window
@@ -1598,6 +1601,8 @@ class MedianWindowFFTWithTimeFreqCov2:
         return features
 
 """
+http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885383/
+
 partitioned into non-overlapping 1-minute blocks, each block Fourier transformed, and
 the resulting power spectrum (0.1-200 Hz) is divided into 6 frequency bands:
 delta 0.1-4, theta 4-8, alpha 8-12, beta 12-30, low-gamma 30-70, and high-gamma 70-180.
@@ -1689,19 +1694,23 @@ class MedianWindowBands:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
     """
-    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1):
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, window=None):
         self.scale_option = scale_option
         assert nwindows > 0
         self.nwindows = nwindows # data is divided into windows
         self.percentile = percentile
         self.bands = bands
         self.p = p
+        self.window = window
+
 
     def get_name(self):
         if self.p == 1:
             name = 'medianwindow-bands-%s-w%d' % (self.scale_option, self.nwindows)
         else:
             name = 'medianwindow-bands%d-%s-w%d' % (self.p, self.scale_option, self.nwindows)
+        if self.window:
+            name += '-' + self.window
         name += '-b' + '-b'.join(map(str,self.bands))
         if self.percentile is not None:
             name += '-' + '-'.join(map(str,self.percentile))
@@ -1729,7 +1738,7 @@ class MedianWindowBands:
             elif self.scale_option == 'us':
                 window = UnitScale().apply(window)
 
-            window1 = Bands(self.bands, p=self.p).apply(window)
+            window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
             windows.append(window1)
 
         sorted_windows = np.sort(np.array(windows), axis=0)
@@ -1883,6 +1892,70 @@ class MedianWindowBandsTimeCorrelation:
                 window = UnitScale().apply(window)
 
             window1 = BandsTimeCorrelation(self.bands).apply(window)
+            windows.append(window1)
+
+        sorted_windows = np.sort(np.array(windows), axis=0)
+        features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+
+        return features
+
+"""
+http://onlinelibrary.wiley.com/doi/10.1111/j.1528-1167.2011.03138.x/full
+
+Power line hums at 50 and 100 Hz have been removed by excluding spectral power in the bands of 47–53
+and 97–103 Hz when the features are extracted
+
+delta (0.5–4 Hz), theta (4–8 Hz), alpha (8–13 Hz), beta (13–30 Hz), four gamma bands (30–47, 53–75, 75–97, and 103–128 Hz,
+excluding power line hums), and their total.
+Power in each of the above bands is divided by the total power and the last feature included is the total power.
+"""
+class MedianWindowBandsI:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,50,75,100,117], p=1):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.percentile = percentile
+        self.bands = bands
+        self.p = p
+
+    def get_name(self):
+        if self.p == 1:
+            name = 'medianwindow-bandsI-%s-w%d' % (self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow-bandsI%d-%s-w%d' % (self.p, self.scale_option, self.nwindows)
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            def mynotch(fftfreq, notchfreq=60., notchwidth=6., Fs=5000.):
+                return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
+            data = resample(data, 239766, axis=-1, window=mynotch)
+        windows = []
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = Bands(self.bands, p=self.p).apply(window)
             windows.append(window1)
 
         sorted_windows = np.sort(np.array(windows), axis=0)

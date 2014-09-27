@@ -1,7 +1,12 @@
 AUC | Submission | Comment
 --- | --- | ---
-0.75037 | 140924-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
-0.74706 | 140924-predict.1 | gen-8_medianwindow-bands-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
+0.74885 | 140926-predict.7 | 140926-predict.6 140926-predict.2 gb=0.2 rf=1 | 140926-mix-submissions
+        | 140926-predict.6 | n_estimators=1000 | 140926-GBC 140926-GBC-combine
+0.74626 | 140926-predict.5 | 140926-predict.3 140926-predict.2 gb=0.3 rf=1 | 140926-mix-submissions
+0.72241 | 140926-predict.4 | 140926-predict.3 140926-predict.2 gb=0.7 rf=1 | 140926-mix-submissions
+0.63842 | 140926-predict.3 | n_estimators=400 gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 | 140926-GBC 140926-GBC-combine
+0.75037 | 140926-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
+0.74706 | 140926-predict.1 | gen-8_medianwindow-bands-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
 0.72947 | 140923-predict.3 | gen-8_medianwindow2-fft-with-time-freq-corr-2-480-usf-w60
 0.73730 | 140923-predict.2 | gen-8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=0 patient jump
 0.67886 | 140923-predict.1 | gen-8_medianwindow1-fft-with-time-freq-corr-1-48-r400-usf-w600 PWEIGHT=0 normal_cutoff = 0.02

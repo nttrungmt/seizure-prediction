@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from collections import namedtuple
 import os.path
 import numpy as np
@@ -286,12 +289,12 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
             elif y is not None:
                 # this is interictal
                 label = 0 if key.startswith('preictal') else 2
-                if key.startswith('preictal'): # or key.startswith('interictal'):
+                if key.startswith('preictal') or key.startswith('interictal'):
                     # generate extra preictal training data by taking 2nd half of previous
                     # 10-min segment and first half of current segment
                     # 0.5-1.5, 1.5-2.5, ..., 13.5-14.5, ..., 15.5-16.5
                     # cannot take half of 15 and half of 16 because it cannot be strictly labelled as early or late
-                    if gen_ictal and prev_data is not None and prev_sequence+1 == sequence:
+                    if key.startswith('preictal') and gen_ictal and prev_data is not None and prev_sequence+1 == sequence:
                         if isinstance(gen_ictal,bool) or gen_ictal > 0:
                             ng = int(gen_ictal)
                             new_data = np.concatenate((prev_data, data), axis=-1)
