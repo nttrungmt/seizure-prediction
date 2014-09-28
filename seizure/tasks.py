@@ -290,13 +290,15 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                 # this is interictal
                 label = 0 if key.startswith('preictal') else 2
                 if key.startswith('preictal') or key.startswith('interictal'):
-                    # generate extra preictal training data by taking 2nd half of previous
-                    # 10-min segment and first half of current segment
-                    # 0.5-1.5, 1.5-2.5, ..., 13.5-14.5, ..., 15.5-16.5
-                    # cannot take half of 15 and half of 16 because it cannot be strictly labelled as early or late
-                    if key.startswith('preictal') and gen_ictal and prev_data is not None and prev_sequence+1 == sequence:
+                    # generate extra training data by taking overlaps with previous
+                    # segment
+                    # negative gen_ictal indicates we want to correct for DC jump between segments
+                    # non integer value indicates we want to generate overlaps also for negative examples
+                    ng = abs(int(gen_ictal)) # number of overlapping windows
+                    if (gen_ictal and
+                            (key.startswith('preictal') or gen_ictal != int(gen_ictal)) and
+                                prev_data is not None and prev_sequence+1 == sequence):
                         if isinstance(gen_ictal,bool) or gen_ictal > 0:
-                            ng = int(gen_ictal)
                             new_data = np.concatenate((prev_data, data), axis=-1)
                         else:
                             # see 140922-signal-crosscorelation
@@ -304,7 +306,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                             # however different segments will be scaled differently
                             # as result you can't concatenate sequential segments
                             # without undoing the relative offset
-                            ng = -gen_ictal
+
                             # import scipy.signal
                             # # we want to filter the samples so as to not be sensitive to change in the signal itself
                             # # over the distance of one sample (1/Fs). Taking 100 samples sounds safe enough.

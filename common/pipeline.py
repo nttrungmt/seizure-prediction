@@ -15,7 +15,7 @@ class Pipeline(object):
             if isinstance(self.gen_ictal,bool) or self.gen_ictal==1:
                 names = ['gen'] + names
             else:
-                names = ['gen%d'%self.gen_ictal] + names
+                names = ['gen%g'%self.gen_ictal] + names
         return 'empty' if len(names) == 0 else '_'.join(names)
 
     def __init__(self, gen_ictal, pipeline):

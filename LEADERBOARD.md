@@ -1,5 +1,11 @@
 AUC | Submission | Comment
 --- | --- | ---
+0.75955 | 140928-predict.5 | 140928-predict.2 mean probabilites | 140928-postprocessing
+0.73419 | 140928-predict.3 | 140928-predict.2 multiply probabilites
+0.75501 | 140928-predict.2 | 140928-predict.1 140926-predict.2 gb=0.4 rf=1 | 140927-mix-submissions
+        | 140928-predict.1 | gen-8.5_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=1000 pratio=1 in predict | 140927-GBC 140927-GBC-combine
+0.75295 | 140927-predict.2 | 140927-predict.1 140926-predict.2 gb=0.2 rf=1 | 140927-mix-submissions
+        | 140927-predict.1 | gen-8.5_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=100 pratio=5 1 in predict | 140927-GBC 140927-GBC-combine
 0.74885 | 140926-predict.7 | 140926-predict.6 140926-predict.2 gb=0.2 rf=1 | 140926-mix-submissions
         | 140926-predict.6 | n_estimators=1000 | 140926-GBC 140926-GBC-combine
 0.74626 | 140926-predict.5 | 140926-predict.3 140926-predict.2 gb=0.3 rf=1 | 140926-mix-submissions
