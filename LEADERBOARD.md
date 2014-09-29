@@ -1,5 +1,6 @@
 AUC | Algo | Submission | Comment
 --- | --- | --- | ---
+0.77097 | Post | 140928-predict.8 | 140928-predict.2 max probabilites | 140928-postprocessing-1
 0.76948 | Post | 140928-predict.7 | 140928-predict.2 max probabilites | 140928-postprocessing
 0.70747 | RF | 140928-predict.6 | gen-8.5_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 |
 0.75955 | Post | 140928-predict.5 | 140928-predict.2 mean probabilites | 140928-postprocessing
