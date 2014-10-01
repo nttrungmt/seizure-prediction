@@ -1694,10 +1694,11 @@ class MedianWindowBands:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
     """
-    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, window=None):
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1, window=None):
         self.scale_option = scale_option
         assert nwindows > 0
         self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
         self.percentile = percentile
         self.bands = bands
         self.p = p
@@ -1712,6 +1713,8 @@ class MedianWindowBands:
         if self.window:
             name += '-' + self.window
         name += '-b' + '-b'.join(map(str,self.bands))
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
         if self.percentile is not None:
             name += '-' + '-'.join(map(str,self.percentile))
         return name
@@ -1741,8 +1744,22 @@ class MedianWindowBands:
             window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
             windows.append(window1)
 
-        sorted_windows = np.sort(np.array(windows), axis=0)
-        features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+        windows = np.array(windows)
+        if self.nunits > 1:
+            unit_skip = self.nwindows / self.nunits
+            features = None
+            for i in range(self.nunits):
+                sorted_windows = np.sort(windows[i*unit_skip:(i+1)*unit_skip,:], axis=0)
+                n = sorted_windows.shape[0]
+                unit_features = np.concatenate([sorted_windows[int(p*n),:] for p in self.percentile], axis=-1)
+
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+        else:
+            sorted_windows = np.sort(windows, axis=0)
+            features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
 
         return features
 
