@@ -1694,7 +1694,7 @@ class MedianWindowBands:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
     """
-    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1, window=None):
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1, window=None, pca=False):
         self.scale_option = scale_option
         assert nwindows > 0
         self.nwindows = nwindows # data is divided into windows
@@ -1703,6 +1703,7 @@ class MedianWindowBands:
         self.bands = bands
         self.p = p
         self.window = window
+        self.pca = pca
 
 
     def get_name(self):
@@ -1717,6 +1718,8 @@ class MedianWindowBands:
             name += '-u%d'%self.nunits
         if self.percentile is not None:
             name += '-' + '-'.join(map(str,self.percentile))
+        if self.pca:
+            name += '-pca'
         return name
 
     def apply(self, data):
@@ -1731,6 +1734,192 @@ class MedianWindowBands:
                 return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
             data = resample(data, 239766, axis=-1, window=mynotch)
         windows = []
+
+        if self.pca:
+            import sklearn.decomposition
+            data = sklearn.decomposition.PCA().fit_transform(data.T).T
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
+            windows.append(window1)
+
+        windows = np.array(windows)
+        if self.nunits > 1:
+            unit_skip = self.nwindows / self.nunits
+            features = None
+            for i in range(self.nunits):
+                sorted_windows = np.sort(windows[i*unit_skip:(i+1)*unit_skip,:], axis=0)
+                n = sorted_windows.shape[0]
+                unit_features = np.concatenate([sorted_windows[int(p*n),:] for p in self.percentile], axis=-1)
+
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+        else:
+            sorted_windows = np.sort(windows, axis=0)
+            features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+
+        return features
+
+class MedianWindowBands1:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1, window=None, pca=False):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.bands = bands
+        self.p = p
+        self.window = window
+        self.pca = pca
+
+
+    def get_name(self):
+        if self.p == 1:
+            name = 'medianwindow1-bands-%s-w%d' % (self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow1-bands%d-%s-w%d' % (self.p, self.scale_option, self.nwindows)
+        if self.window:
+            name += '-' + self.window
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        if self.pca:
+            name += '-pca'
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            def mynotch(fftfreq, notchfreq=60., notchwidth=5., Fs=5000.):
+                return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
+            data = resample(data, 239766, axis=-1, window=mynotch)
+        windows = []
+
+        if self.pca:
+            import sklearn.decomposition
+            data = sklearn.decomposition.PCA().fit_transform(data.T).T
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
+            windows.append(window1)
+
+        windows = np.array(windows)
+        if self.nunits > 1:
+            unit_skip = self.nwindows / self.nunits
+            features = None
+            for i in range(self.nunits):
+                sorted_windows = np.sort(windows[i*unit_skip:(i+1)*unit_skip,:], axis=0)
+                n = sorted_windows.shape[0]
+                unit_features = np.concatenate([sorted_windows[int(p*n),:] for p in self.percentile], axis=-1)
+
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+        else:
+            sorted_windows = np.sort(windows, axis=0)
+            features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+
+        return features
+
+class MedianWindowBands2:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70,130], p=1, nunits=1, window=None, pca=False):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.bands = bands
+        self.p = p
+        self.window = window
+        self.pca = pca
+
+
+    def get_name(self):
+        if self.p == 1:
+            name = 'medianwindow2-bands-%s-w%d' % (self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow2-bands%d-%s-w%d' % (self.p, self.scale_option, self.nwindows)
+        if self.window:
+            name += '-' + self.window
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        if self.pca:
+            name += '-pca'
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        Nfs = data.shape[1]
+        N = 239766 # N for Fs=399.61
+        Fs = Nfs/(10.*60.) # we are expecting 10min windows
+        if Fs > 410:
+            notchfreq = 60.
+            e = np.zeros(data.shape[0])
+            q = int(Fs/notchfreq+0.5)
+            for i in range(q):
+                s = np.mean(data[:,(np.arange(i,Nfs,Fs/60.)).astype(int)], axis=-1)
+                e += s*s
+            if np.mean(np.sqrt(e/q)) > 1.:
+                notchwidth = 8.
+                notchwidths = notchwidth/2./Fs
+                notchfreqs = notchfreq/Fs
+                import numpy.fft
+                fftfreq = np.abs(numpy.fft.fftfreq(data.shape[-1]))
+                notch = np.ones(Nfs)
+                for h in range(1,int((Fs/2.)/notchfreq+0.5)): # loop over all harmonies of notch frequency
+                    notch[np.abs(fftfreq - h*notchfreqs) < notchwidths] = 0.
+            else:
+                notch = None
+            data = resample(data, N, axis=-1, window=notch)
+        windows = []
+
+        if self.pca:
+            import sklearn.decomposition
+            data = sklearn.decomposition.PCA().fit_transform(data.T).T
 
         istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
         for i in range(self.nwindows):

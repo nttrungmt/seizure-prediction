@@ -322,7 +322,7 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                             # # the first sample of data should be about the same as the last sample of prev_data
                             # data_offset = x2[:,-1] - x1[:,-1]
                             if data.shape[1] > 5*60*5000: # only Patients need offset correction
-                                data_offset = data[:,0:10].mean(axis=-1) - prev_data[:,-10:].mean(axis=-1)
+                                data_offset = data[:,:1].mean(axis=-1) - prev_data[:,-1:].mean(axis=-1)
                                 data -= data_offset.reshape(-1,1)
                             new_data = np.concatenate((prev_data, data), axis=-1)
 

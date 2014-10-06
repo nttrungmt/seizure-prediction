@@ -1,6 +1,16 @@
 AUC | Algo | Submission | Comment
 --- | --- | --- | ---
-0.78043 | Post | 140930-predict.10 | 140930-predict.9 max probabilites | 140928-postprocessing
+0.80999 | Post | 141005-predict.2 | 141001-predict.4 max probabilites | 141005-postprocessing
+0.74741 | RF  | 141005-predict.1 | gen-8_medianwindow2-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-b130-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
+0.56605 | DBN | 141003-predict.4 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,dropout=0.1,0.5,epochs=1000 | 140930-DBN-predict
+0.61003 | DBN | 141003-predict.3 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,dropout=0.5,epochs=1000 | 140930-DBN-predict
+0.74985 | RF  | 141003-predict.2 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
+0.72810 | RF  | 141003-predict.1 | gen-8.5_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
+0.76556 | Mix | 141001-predict.4 | 140928-predict.1 140926-predict.2 141001-predict.1 140930-predict.5 gb=0.4 rf=0.8 rfpca=0.4 dbn=0.6| 141001-mix-submissions
+0.77513 | Post | 141001-predict.3 | 141001-predict.2 max probabilites | 140929-postprocessing
+0.76473 | Mix | 141001-predict.2 | 140928-predict.1 140926-predict.2 141001-predict.1 140930-predict.5 gb=0.4 rf=1 rfpca=0.6 dbn=0.6| 141001-mix-submissions
+0.71358 | RF | 141001-predict.1 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9-pca n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=15 | 140929-RF-predict
+0.78043 | Post | 140930-predict.10 | 140930-predict.9 max probabilites | 140929-postprocessing
   | Mix | 140930-predict.9 | 140928-predict.1 140926-predict.2 140930-predict.5 gb=0.4 rf=1 dbn=0.6| 140930-mix-submissions
   | DBN | 140930-predict.8 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=500 clip=3| 140930-DBN-predict
 0.68890 | DBN | 140930-predict.7 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=1000 | 140930-DBN-predict
