@@ -1952,6 +1952,116 @@ class MedianWindowBands2:
 
         return features
 
+class MedianWindowBands3:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1, window=None, pca=False):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.bands = bands
+        self.p = p
+        self.window = window
+        self.pca = pca
+
+
+    def get_name(self):
+        if self.p == 1:
+            name = 'medianwindow3-bands-%s-w%d' % (self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow3-bands%d-%s-w%d' % (self.p, self.scale_option, self.nwindows)
+        if self.window:
+            name += '-' + self.window
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        if self.pca:
+            name += '-pca'
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        data = data.copy() # make sure we are not overriding anything
+        data = data - data.mean(axis=-1).reshape(-1,1) # remove DC
+        data = data - data.mean(axis=0) # remove the average of all channels. this remove almost all 60Hz ham
+
+        Nfs = data.shape[1] # number of samples in each channel
+        N = 239766 # N for Fs=399.61
+        Fs = Nfs/(10.*60.) # sampling frequency, we are expecting 10min windows
+
+        # measure energy in ham noise
+        ham = 60. # ham frequency we want to clean up
+        q = int(Fs/ham+0.5) # number of samples in a single ham cycle
+        matchfilter = np.empty((data.shape[0],q))
+        for i in range(q):
+            matchfilter[:,i] = np.mean(data[:,(np.arange(i,Nfs,Fs/ham)).astype(int)], axis=-1)
+        e = np.mean(np.std(matchfilter, axis=-1)) # ham energey
+
+        if e > 0.01: # this is a low level that appears also in Dogs
+            # build a notch filter to remove all harmonies of ham noise
+            notchwidth = 0.08 # very narrow notch filter which is needed after removing the channel mean
+            notchwidths = notchwidth/2./Fs
+            notchfreqs = ham/Fs
+            import numpy.fft
+            fftfreq = np.abs(numpy.fft.fftfreq(data.shape[-1]))
+            notch = np.ones(Nfs)
+            for h in range(1,int((Fs/2.)/ham+0.5)): # loop over all harmonies of notch frequency, skip 0=DC
+                notch[np.abs(fftfreq - h*notchfreqs) < notchwidths] = 0.
+        else:
+            notch = None
+
+        if Nfs != N or notch is not None:
+            data = resample(data, N, axis=-1, window=notch)
+
+        windows = []
+
+        if self.pca:
+            import sklearn.decomposition
+            data = sklearn.decomposition.PCA().fit_transform(data.T).T
+
+        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
+        for i in range(self.nwindows):
+            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
+            windows.append(window1)
+
+        windows = np.array(windows)
+        if self.nunits > 1:
+            unit_skip = self.nwindows / self.nunits
+            features = None
+            for i in range(self.nunits):
+                sorted_windows = np.sort(windows[i*unit_skip:(i+1)*unit_skip,:], axis=0)
+                n = sorted_windows.shape[0]
+                unit_features = np.concatenate([sorted_windows[int(p*n),:] for p in self.percentile], axis=-1)
+
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+        else:
+            sorted_windows = np.sort(windows, axis=0)
+            features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+
+        return features
+
 class MedianWindowBandsCorrelation:
     """
     Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.

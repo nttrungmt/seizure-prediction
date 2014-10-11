@@ -1,5 +1,11 @@
 AUC | Algo | Submission | Comment
 --- | --- | --- | ---
+0.74989 | RF  | 141006-predict.4.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=5 | 140929-RF-predict
+0.74914 | RF  | 141006-predict.4.1 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
+0.74957 | RF  | 141006-predict.4 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
+0.74368 | RF  | 141006-predict.3 | gen-8_medianwindow3-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=5 | 140929-RF-predict
+0.74373 | RF  | 141006-predict.2 | gen-8_medianwindow3-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=15 | 140929-RF-predict
+0.74710 | RF  | 141006-predict.1 | gen-8_medianwindow3-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
 0.80999 | Post | 141005-predict.2 | 141001-predict.4 max probabilites | 141005-postprocessing
 0.74741 | RF  | 141005-predict.1 | gen-8_medianwindow2-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-b130-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
 0.56605 | DBN | 141003-predict.4 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,dropout=0.1,0.5,epochs=1000 | 140930-DBN-predict
