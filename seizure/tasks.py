@@ -206,18 +206,45 @@ def seizure_ranges_for_latencies(latencies):
 def load_mat_data(data_dir, target, component):
     dir = os.path.join(data_dir, target)
     done = False
-    i = 0
+    i = 1
+    j = 1
+    isfilter = data_dir.find('filter') >= 0
     while not done:
-        i += 1
         if task_predict:
-            filename = '%s/%s_%s_segment_%04d.mat' % (dir, target, component, i)
+            if isfilter:
+                filename = '%s/%s_%s_segment_%04d_%d.hkl' % (dir, target, component, i, j)
+            else:
+                filename = '%s/%s_%s_segment_%04d.mat' % (dir, target, component, i)
         else:
             filename = '%s/%s_%s_segment_%d.mat' % (dir, target, component, i)
 
         if os.path.exists(filename):
-            data = scipy.io.loadmat(filename)
+            segment = i
+            sequence = j
+            i += 1
+            j = 1
+            if isfilter:
+                import hickle as hkl
+                d = hkl.load(filename)
+                channels = map(str,range(d.shape[0]))
+                data = {}
+                k = '%s_segment_%d'%(component, segment)
+                def f(x, n=2):
+                    while n:
+                        x = [x]
+                        n -= 1
+                    return np.array([[np.array(x)]])
+                data[k] = {'data_length_sec':f(600), 'sampling_frequency':f(399.61),
+                           'channels':f(channels,1), 'data':f(d,0)}
+                if component != 'test':
+                    data[k]['sequence'] = f(sequence)
+            else:
+                data = scipy.io.loadmat(filename)
             yield(data)
         else:
+            if isfilter and j < 6:
+                j += 1
+                continue
             if i == 1:
                 raise Exception("file %s not found" % filename)
             done = True

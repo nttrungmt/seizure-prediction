@@ -1,5 +1,7 @@
 AUC | Algo | Submission | Comment
 --- | --- | --- | ---
+0.74595 | RF  | 141016-predict.3 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=5 | 141016-data-2-hkl-1 140929-RF-predict
+0.74358 | RF  | 141016-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=5 | 141016-data-2-hkl 140929-RF-predict
 0.74989 | RF  | 141006-predict.4.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=5 | 140929-RF-predict
 0.74914 | RF  | 141006-predict.4.1 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
 0.74957 | RF  | 141006-predict.4 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9
