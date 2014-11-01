@@ -56,6 +56,7 @@ docs/_build/
 .idea/
 data-cache/
 seizure-data/
+filtered-seizure-data
 submissions/
 data-cache
 notebooks/.ipynb_checkpoints/

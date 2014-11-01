@@ -30,6 +30,8 @@ target2nchannels = {'Dog_1': 16,
  'Patient_1': 15,
  'Patient_2': 24}
 
+target = None
+cache_dir = None
 
 class FFT:
     """
@@ -589,8 +591,8 @@ class BandsCorrelation:
 
     Features can be selected/omitted using the constructor arguments.
     """
-    def __init__(self, bands, scale_option='none', with_fft=False, with_corr=True, with_eigen=True,
-                 window='None'):
+    def __init__(self, bands, scale_option='none', with_fft=True, with_corr=True, with_eigen=True,
+                 window='None', p=1):
         self.bands = bands
         self.scale_option = scale_option
         self.with_fft = with_fft
@@ -599,6 +601,7 @@ class BandsCorrelation:
         self.window = window
         assert scale_option in ('us', 'usf', 'none')
         assert with_corr or with_eigen
+        self.p = p
 
     def get_name(self):
         selections = []
@@ -612,18 +615,21 @@ class BandsCorrelation:
             selection_str = '-' + '-'.join(selections)
         else:
             selection_str = ''
-        name = 'bands-correlation-%s-%s%s' % ('withfft' if self.with_fft else 'nofft',
+        name = 'bands'
+        if self.p != 1:
+            name += str(self.p)
+        name += '-correlation-%s-%s%s' % ('withfft' if self.with_fft else 'nofft',
                                                    self.scale_option, selection_str)
         name += '-' + '-b'.join(map(str,self.bands))
         return name
 
     def apply(self, data):
         data1 = FFT(self.window).apply(data)
-        data1 = Magnitude().apply(data1)
+        data1 = Magnitude(p=self.p).apply(data1)
         data1 = Band(self.bands).apply(data1)
         data1 = Log10().apply(data1)
 
-        data2 = data1
+        data2 = data1.copy()
         if self.scale_option == 'usf':
             data2 = UnitScaleFeat().apply(data2)
         elif self.scale_option == 'us':
@@ -1738,6 +1744,13 @@ class MedianWindowBands:
         if self.pca:
             import sklearn.decomposition
             data = sklearn.decomposition.PCA().fit_transform(data.T).T
+        elif self.scale_option.startswith('14'):
+            import os
+            import cPickle as pickle
+            fname = os.path.join(cache_dir,'%s.%s.pkl'%(self.scale_option,target))
+            with open(fname, 'rb') as fp:
+                m = pickle.load(fp)
+            data = m.transform(data.T).T
 
         istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
         for i in range(self.nwindows):
@@ -1747,6 +1760,7 @@ class MedianWindowBands:
                 window = UnitScaleFeat().apply(window)
             elif self.scale_option == 'us':
                 window = UnitScale().apply(window)
+
 
             window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
             windows.append(window1)
@@ -1776,7 +1790,8 @@ class MedianWindowBands1:
     The above is performed on windows which is resmapled to max_hz
     if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
     """
-    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1, window=None, pca=False):
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1,
+                 window=None, pca=False, timecorr=False, skip=1):
         self.scale_option = scale_option
         assert nwindows > 0
         self.nwindows = nwindows # data is divided into windows
@@ -1786,6 +1801,8 @@ class MedianWindowBands1:
         self.p = p
         self.window = window
         self.pca = pca
+        self.timecorr = timecorr
+        self.skip = skip
 
 
     def get_name(self):
@@ -1802,6 +1819,10 @@ class MedianWindowBands1:
             name += '-' + '-'.join(map(str,self.percentile))
         if self.pca:
             name += '-pca'
+        if self.timecorr:
+            name += '-timecorr'
+        if self.skip != 1:
+            name += '-s%d'%self.skip
         return name
 
     def apply(self, data):
@@ -1820,22 +1841,42 @@ class MedianWindowBands1:
         if self.pca:
             import sklearn.decomposition
             data = sklearn.decomposition.PCA().fit_transform(data.T).T
+        elif self.scale_option == 'ica':
+            import sklearn.decomposition
+            data = sklearn.decomposition.FastICA().fit_transform(data.T).T
+        elif self.scale_option.startswith('14'):
+            import os
+            import cPickle as pickle
+            fname = os.path.join(cache_dir,'%s.%s.pkl'%(self.scale_option,target))
+            with open(fname, 'rb') as fp:
+                m = pickle.load(fp)
+            data = m.transform(data.T).T
 
-        istartend = np.linspace(0.,data.shape[1],self.nwindows+1)
-        for i in range(self.nwindows):
-            window = data[:,int(istartend[i]):int(istartend[i+1])].astype(float)
+        istartend = np.linspace(0.,data.shape[1],self.skip*self.nwindows+1)
+        for i in range(self.skip*self.nwindows+1-self.skip):
+            window = data[:,int(istartend[i]):int(istartend[i+self.skip])].astype(float)
 
             if self.scale_option == 'usf':
                 window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'usf1':
+                window = preprocessing.scale(window, with_std=False, axis=0)
+            elif self.scale_option == 'usf2':
+                window = UnitScaleFeat().apply(window)
+                window = window * window
             elif self.scale_option == 'us':
                 window = UnitScale().apply(window)
 
             window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
-            windows.append(window1)
+            if self.timecorr:
+                window2 = TimeCorrelation().apply(window)
+                windows.append(np.concatenate((window2,window1)))
+            else:
+                windows.append(window1)
+        nw = len(windows)
 
         windows = np.array(windows)
         if self.nunits > 1:
-            unit_skip = self.nwindows / self.nunits
+            unit_skip = nw / self.nunits
             features = None
             for i in range(self.nunits):
                 sorted_windows = np.sort(windows[i*unit_skip:(i+1)*unit_skip,:], axis=0)
@@ -1848,9 +1889,11 @@ class MedianWindowBands1:
                     features = np.concatenate((features, unit_features), axis=-1)
         else:
             sorted_windows = np.sort(windows, axis=0)
-            features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
+            features = np.concatenate([sorted_windows[int(p*nw),:] for p in self.percentile], axis=-1)
 
         return features
+
+
 
 class MedianWindowBands2:
     """
@@ -2278,3 +2321,223 @@ class MedianWindowBandsI:
         features = np.concatenate([sorted_windows[int(p*self.nwindows),:] for p in self.percentile], axis=-1)
 
         return features
+
+class MedianWindowDiffBands:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1,
+                 window=None, pca=False, timecorr=False, skip=1):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.bands = bands
+        self.p = p
+        self.window = window
+        self.pca = pca
+        self.timecorr = timecorr
+        self.skip = skip
+
+
+    def get_name(self):
+        if self.p == 1:
+            name = 'medianwindow1-bands-%s-w%d' % (self.scale_option, self.nwindows)
+        else:
+            name = 'medianwindow1-bands%d-%s-w%d' % (self.p, self.scale_option, self.nwindows)
+        if self.window:
+            name += '-' + self.window
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        if self.pca:
+            name += '-pca'
+        if self.timecorr:
+            name += '-timecorr'
+        if self.skip != 1:
+            name += '-s%d'%self.skip
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            def mynotch(fftfreq, notchfreq=60., notchwidth=5., Fs=5000.):
+                return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
+            data = resample(data, 239766, axis=-1, window=mynotch)
+        windows = []
+
+        if self.pca:
+            import sklearn.decomposition
+            data = sklearn.decomposition.PCA().fit_transform(data.T).T
+        elif self.scale_option == 'ica':
+            import sklearn.decomposition
+            data = sklearn.decomposition.FastICA().fit_transform(data.T).T
+        elif self.scale_option.startswith('14'):
+            import os
+            import cPickle as pickle
+            fname = os.path.join(cache_dir,'%s.%s.pkl'%(self.scale_option,target))
+            with open(fname, 'rb') as fp:
+                m = pickle.load(fp)
+            data = m.transform(data.T).T
+
+        istartend = np.linspace(0.,data.shape[1],self.skip*self.nwindows+1)
+        for i in range(self.skip*self.nwindows+1-self.skip):
+            window = data[:,int(istartend[i]):int(istartend[i+self.skip])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'usf1':
+                window = preprocessing.scale(window, with_std=False, axis=0)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = Bands(self.bands, window=self.window, p=self.p).apply(window)
+            if self.timecorr:
+                window2 = TimeCorrelation().apply(window)
+                windows.append(np.concatenate((window2,window1)))
+            else:
+                windows.append(window1)
+        nw = len(windows)
+
+        windows = np.array(windows)
+        if self.nunits > 1:
+            unit_skip = nw / self.nunits
+            features = None
+            for i in range(self.nunits):
+                sorted_windows = np.sort(windows[i*unit_skip:(i+1)*unit_skip,:], axis=0)
+                n = sorted_windows.shape[0]
+                unit_features = np.concatenate([sorted_windows[int(p*n),:] for p in self.percentile], axis=-1)
+
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+        else:
+            sorted_windows = np.sort(windows, axis=0)
+            features = np.concatenate([sorted_windows[int(p*nw),:] for p in self.percentile], axis=-1)
+
+        return features
+
+class MedianWindowBandsCorrelation1:
+    """
+    Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
+    The above is performed on windows which is resmapled to max_hz
+    if there is more than one window, the median (50% percentile), 10% perecentile and 90% perecentile are taken.
+    """
+    def __init__(self, scale_option, nwindows, percentile=[0.1,0.5,0.9], bands=[0.2,4,8,12,30,70], p=1, nunits=1,
+                 window=None, pca=False, timecorr=False, skip=1, with_fft=True):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.nunits = nunits # windows are grouped into units
+        self.percentile = percentile
+        self.bands = bands
+        self.p = p
+        self.window = window
+        self.pca = pca
+        self.timecorr = timecorr
+        self.skip = skip
+        self.with_fft = with_fft
+
+
+    def get_name(self):
+        name = 'medianwindow1'
+        if self.p == 1:
+            name += '-bandscorr'
+        else:
+            name += '-bandscorr%d' % self.p
+        if not self.with_fft:
+            name += '-nofft'
+        name += '-%s-w%d' % (self.scale_option, self.nwindows)
+        if self.window:
+            name += '-' + self.window
+        name += '-b' + '-b'.join(map(str,self.bands))
+        if self.nunits != 1:
+            name += '-u%d'%self.nunits
+        if self.percentile is not None:
+            name += '-' + '-'.join(map(str,self.percentile))
+        if self.pca:
+            name += '-pca'
+        if self.timecorr:
+            name += '-timecorr'
+        if self.skip != 1:
+            name += '-s%d'%self.skip
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            def mynotch(fftfreq, notchfreq=60., notchwidth=5., Fs=5000.):
+                return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
+            data = resample(data, 239766, axis=-1, window=mynotch)
+        windows = []
+
+        if self.pca:
+            import sklearn.decomposition
+            data = sklearn.decomposition.PCA().fit_transform(data.T).T
+        elif self.scale_option == 'ica':
+            import sklearn.decomposition
+            data = sklearn.decomposition.FastICA().fit_transform(data.T).T
+        elif self.scale_option.startswith('14'):
+            import os
+            import cPickle as pickle
+            fname = os.path.join(cache_dir,'%s.%s.pkl'%(self.scale_option,target))
+            with open(fname, 'rb') as fp:
+                m = pickle.load(fp)
+            data = m.transform(data.T).T
+
+        istartend = np.linspace(0.,data.shape[1],self.skip*self.nwindows+1)
+        for i in range(self.skip*self.nwindows+1-self.skip):
+            window = data[:,int(istartend[i]):int(istartend[i+self.skip])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'usf1':
+                window = preprocessing.scale(window, with_std=False, axis=0)
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = BandsCorrelation(self.bands, window=self.window, p=self.p, with_fft=self.with_fft).apply(window)
+            if self.timecorr:
+                window2 = TimeCorrelation().apply(window)
+                windows.append(np.concatenate((window2,window1)))
+            else:
+                windows.append(window1)
+        nw = len(windows)
+
+        windows = np.array(windows)
+        if self.nunits > 1:
+            unit_skip = nw / self.nunits
+            features = None
+            for i in range(self.nunits):
+                sorted_windows = np.sort(windows[i*unit_skip:(i+1)*unit_skip,:], axis=0)
+                n = sorted_windows.shape[0]
+                unit_features = np.concatenate([sorted_windows[int(p*n),:] for p in self.percentile], axis=-1)
+
+                if features is None:
+                    features = unit_features
+                else:
+                    features = np.concatenate((features, unit_features), axis=-1)
+        else:
+            sorted_windows = np.sort(windows, axis=0)
+            features = np.concatenate([sorted_windows[int(p*nw),:] for p in self.percentile], axis=-1)
+
+        return features
+
+
+

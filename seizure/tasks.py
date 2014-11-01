@@ -249,10 +249,42 @@ def load_mat_data(data_dir, target, component):
                 raise Exception("file %s not found" % filename)
             done = True
 
+def count_mat_data(data_dir, target, component):
+    dir = os.path.join(data_dir, target)
+    done = False
+    i = 1
+    j = 1
+    isfilter = data_dir.find('filter') >= 0
+    while not done:
+        if task_predict:
+            if isfilter:
+                filename = '%s/%s_%s_segment_%04d_%d.hkl' % (dir, target, component, i, j)
+            else:
+                filename = '%s/%s_%s_segment_%04d.mat' % (dir, target, component, i)
+        else:
+            filename = '%s/%s_%s_segment_%d.mat' % (dir, target, component, i)
+
+        if os.path.exists(filename):
+            segment = i
+            sequence = j
+            i += 1
+            j = 1
+            yield(1)
+        else:
+            if isfilter and j < 6:
+                j += 1
+                continue
+            if i == 1:
+                raise Exception("file %s not found" % filename)
+            done = True
+
 
 # process all of one type of the competition mat data
 # data_type is one of ('ictal', 'interictal', 'test')
-def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
+def parse_input_data(data_dir, target, data_type, pipeline=None, gen_ictal=False):
+    import transforms
+    transforms.target = target
+
     ictal = data_type == 'ictal'
     preictal = data_type == 'preictal'
     interictal = data_type == 'interictal'
@@ -285,7 +317,11 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
             else:
                 data = segment['data']
                 sequence = None
-            transformed_data = pipeline.apply(data)
+            if pipeline is not None:
+                transformed_data = pipeline.apply(data)
+            else:
+                transformed_data = data
+
 
             if with_latency:
                 # this is ictal
@@ -305,7 +341,10 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                     def split(d):
                         return np.split(d, 2, axis=axis)
                     new_data = np.concatenate((split(prev_data)[1], split(data)[0]), axis=axis)
-                    X.append(pipeline.apply(new_data))
+                    if pipeline is not None:
+                        X.append(pipeline.apply(new_data))
+                    else:
+                        X.append(new_data.copy())
                     y.append(y_value)
                     latencies.append(latency - 0.5)
 
@@ -370,7 +409,10 @@ def parse_input_data(data_dir, target, data_type, pipeline, gen_ictal=False):
                         # new_data = np.concatenate((prev_data, data), axis=-1)
                         for i in range(1,ng+1):
                             start = int(s*i)
-                            X.append(pipeline.apply(new_data[:,start:(start+n)]))
+                            if pipeline is not None:
+                                X.append(pipeline.apply(new_data[:,start:(start+n)]))
+                            else:
+                                X.append(new_data[:,start:(start+n)].copy())
                             y.append(label) # seizure
                             latencies.append(sequence-1.+i/(ng+1.))
                     y.append(label) # seizure

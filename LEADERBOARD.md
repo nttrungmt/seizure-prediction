@@ -1,5 +1,60 @@
 AUC | Algo | Submission | Comment
---- | --- | --- | ---
+-- | --- | --- | ---
+0.74883 | RF  | 141101-predict.4 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 SMOOTH=0 TRAIN_LOGIT=5 TEST_MIN=.05 TEST_MAX=.9 | 141101-RF-regress-w-test
+0.77403 | RF  | 141101-predict.3 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 SMOOTH=0.3 | 141101-RF-regress-w-test
+0.75249 | RF  | 141101-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 SMOOTH=0.5 | 141101-RF-predict-w-test
+0.72481 | RF  | 141101-predict.1 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 gen-8_medianwindow1-bands2-usf2-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 | 141101-RF-predict
+0.68140 | RF  | 141031-predict.3 | gen-8_medianwindow1-bands2-usf2-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 | 141021-RF-predict
+0.67035 | RF  | 141031-predict.2 | gen-8_medianwindow1-bands2--w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9-pca min_samples_split=1 bootstrap=False max_depth=10 | 141021-RF-predict
+0.69616 | RF  | 141031-predict.1 | gen-8_medianwindow1-bandscorr2--w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9-pca min_samples_split=1 bootstrap=False max_depth=10 | 141021-RF-predict
+0.78698 | Post | 141030-predict.9 | 141030-predict.6 1max  | 141030-postprocessing
+0.79030 | Post | 141030-predict.8 | 141030-predict.6 0.8max  | 141030-postprocessing
+0.78424 | Mix | 141030-predict.7 | 140928-predict.1 141030-predict.1 141001-predict.1 140930-predict.5 gb=0.4 rf=5 rfpca=0.4 dbn=0.6| 141030-mix-submissions
+0.78425 | Mix | 141030-predict.6 | 140928-predict.1 141030-predict.1 141001-predict.1 140930-predict.5 gb=0.4 rf=3 rfpca=0.4 dbn=0.6| 141030-mix-submissions
+0.78378 | Mix | 141030-predict.5 | 140928-predict.1 141030-predict.1 141001-predict.1 140930-predict.5 gb=0.4 rf=2.4 rfpca=0.4 dbn=0.6| 141030-mix-submissions
+0.78278 | Mix | 141030-predict.4 | 140928-predict.1 141030-predict.1 141001-predict.1 140930-predict.5 gb=0.4 rf=2 rfpca=0.4 dbn=0.6| 141030-mix-submissions
+0.78067 | Mix | 141030-predict.3 | 140928-predict.1 141030-predict.1 141001-predict.1 140930-predict.5 gb=0.4 rf=1.4 rfpca=0.4 dbn=0.6| 141030-mix-submissions
+0.77764 | Mix | 141030-predict.2 | 140928-predict.1 141030-predict.1 141001-predict.1 140930-predict.5 gb=0.4 rf=1 rfpca=0.4 dbn=0.6| 141030-mix-submissions
+0.78099 | RF  | 141030-predict.1 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 | 141030-RF-predict
+0.81225 | Post | 141029-predict.10 | 141001-predict.4 0.9max  | 141029-postprocessing-1
+0.81119 | Post | 141029-predict.15 | 141001-predict.4 0.6w  | 141029-postprocessing-3
+0.81313 | Post | 141029-predict.14 | 141001-predict.4 0.2w  | 141029-postprocessing-3
+0.81348 | Post | 141029-predict.13 | 141001-predict.4 0.4w  | 141029-postprocessing-3
+0.81224 | Post | 141029-predict.12 | 141001-predict.4 0.4w  | 141029-postprocessing-2
+0.80843 | Post | 141029-predict.11 | 141001-predict.4 0.5max  | 141029-postprocessing-1
+0.81351 | Post | 141029-predict.10 | 141001-predict.4 0.8max  | 141029-postprocessing-1
+0.79907 | Post | 141029-predict.9 | 141001-predict.4 p6 probabilites | 141029-postprocessing
+0.79067 | Post | 141029-predict.8 | 141001-predict.4 p5 probabilites | 141029-postprocessing
+0.77299 | Post | 141029-predict.7 | 141001-predict.4 p4 probabilites | 141029-postprocessing
+0.74477 | RF  | 141029-predict.6 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 max_features='log2' | 141021-RF-predict
+0.76732 | Mix | 141029-predict.5 | 140928-predict.1 140926-predict.2 141029-predict.4 141001-predict.1 141022-predict.3 140930-predict.5 gb=0.4 rf=0.8 rf1=0.3 rfpca=0.4 rfica=0.35 dbn=0.6| 141022-mix-submissions
+0.68846 | RF  | 141029-predict.4 | gen-8_medianwindow1-bandscorr2-nofft-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 maxdepth=10 | 141021-RF-predict
+0.76538 | Mix | 141029-predict.3 | 140928-predict.1 140926-predict.2 141029-predict.1 141001-predict.1 141022-predict.3 140930-predict.5 gb=0.4 rf=0.7 rf1=0.7 rfpca=0.4 rfica=0.35 dbn=0.6| 141022-mix-submissions
+0.76551 | Mix | 141029-predict.2 | 140928-predict.1 140926-predict.2 140929-predict.1 141001-predict.1 141022-predict.3 140930-predict.5 gb=0.4 rf=0.7 rf1=0.7 rfpca=0.4 rfica=0.35 dbn=0.6| 141022-mix-submissions
+0.74581 | RF  | 141029-predict.1 | gen-8_medianwindow1-bandscorr2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 maxdepth=10 | 141021-RF-predict
+0.67270 | GB  | 141026-predict.6
+0.74658 | RF  | 141026-predict.4 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 maxdepth=10 max_features=10 | 141021-RF-predict
+0.72120 | RF  | 141026-predict.3 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 gen-8_medianwindow1-bands2--w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False,max_depth=10,max_features=15 | 141021-RF-predict-1
+0.71419 | RF  | 141026-predict.2 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 gen-8_medianwindow1-bands2--w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False,max_depth=10 | 141021-RF-predict-1
+0.68272 | RF  | 141026-predict.1 | gen-8_medianwindow1-bands2--w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 | 141021-RF-predict
+0.69601 | GB  | 141025-predict.1 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 | 141025-GBC 141025-GBC-combine
+0.74831 | RF  | 141024-predict.5 | gen-8_medianwindow1-bands2-usf-w30-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9-s2 | 141021-RF-predict
+0.73747 | RF  | 141024-predict.4 | gen-8_medianwindow1-bands2-usf-w30-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 | 141021-RF-predict
+0.74865 | RF  | 141024-predict.3 | gen-8_medianwindow1-bands2-usf-w30-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 | 141021-RF-predict
+0.63015 | RF  | 141024-predict.2 | gen-8_medianwindow1-bands2-ica-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9-timecorr | 141021-RF-predict
+0.64408 | RF  | 141024-predict.1 | gen-8_medianwindow1-bands2-ica-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 | 141021-RF-predict
+0.80879 | Post | 141022-predict.6 | 141022-predict.4 max probabilites | 141022-postprocessing
+0.76758 | Mix | 141022-predict.5 | 140928-predict.1 140926-predict.2 141001-predict.1 141022-predict.3 140930-predict.5 gb=0.65 rf=0.8 rfpca=0.4 rfica=0.35 dbn=0.45| 141022-mix-submissions
+0.76811 | Mix | 141022-predict.4 | 140928-predict.1 140926-predict.2 141001-predict.1 141022-predict.3 140930-predict.5 gb=0.4 rf=0.8 rfpca=0.4 rfica=0.35 dbn=0.6| 141022-mix-submissions
+0.70404 | RF  | 141022-predict.3 | gen-8_medianwindow1-bands2-141022-ICA-model-1-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 maxdepth=10 |  141016-data-2-hkl-1 141021-RF-predict
+0.76625 | Mix | 141022-predict.2 | 140928-predict.1 140926-predict.2 141001-predict.1 141022-predict.1 140930-predict.5 gb=0.4 rf=0.8 rfpca=0.4 rfica=0.3 dbn=0.6| 141022-mix-submissions
+0.65762 | RF  | 141022-predict.1 | gen-8_medianwindow1-bands2-141022-ICA-model-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 maxdepth=10 |  141016-data-2-hkl-1 141021-RF-predict
+0.74936 | RF  | 141021-predict.3 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 maxdepth=10 |  141016-data-2-hkl-1 141021-RF-predict
+0.70999 | RF  | 141021-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 gen-8_medianwindow-bands2-141022-PCA-model-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=10 | 141016-data-2-hkl-1 141021-RF-predict-1
+0.65619 | RF  | 141021-predict.1 | gen-8_medianwindow-bands2-141022-PCA-model-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=5 | 141016-data-2-hkl-1 141021-RF-predict
+0.73976 | RF  | 141018-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 pratio=1/0 max_evals:100 alpha=0 | 141018-RF-hyperopt-weight
+0.71238 | RF  | 141018-predict.1 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 pratio=1/0 max_evals:100 | 141018-RF-hyperopt-weight
+0.72598 | RF  | 141017-predict.1 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 pratio=1/0 max_evals:100 | 141017-RF-hyperopt-weight
 0.74595 | RF  | 141016-predict.3 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=5 | 141016-data-2-hkl-1 140929-RF-predict
 0.74358 | RF  | 141016-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=5 | 141016-data-2-hkl 140929-RF-predict
 0.74989 | RF  | 141006-predict.4.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=5 | 140929-RF-predict
@@ -13,14 +68,14 @@ AUC | Algo | Submission | Comment
 0.56605 | DBN | 141003-predict.4 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,dropout=0.1,0.5,epochs=1000 | 140930-DBN-predict
 0.61003 | DBN | 141003-predict.3 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,dropout=0.5,epochs=1000 | 140930-DBN-predict
 0.74985 | RF  | 141003-predict.2 | gen-8_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
-0.72810 | RF  | 141003-predict.1 | gen-8.5_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
+0.72810 | RF  | 141003-predict.1 | gen-120_medianwindow1-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 max_depth=10 | 140929-RF-predict
 0.76556 | Mix | 141001-predict.4 | 140928-predict.1 140926-predict.2 141001-predict.1 140930-predict.5 gb=0.4 rf=0.8 rfpca=0.4 dbn=0.6| 141001-mix-submissions
 0.77513 | Post | 141001-predict.3 | 141001-predict.2 max probabilites | 140929-postprocessing
 0.76473 | Mix | 141001-predict.2 | 140928-predict.1 140926-predict.2 141001-predict.1 140930-predict.5 gb=0.4 rf=1 rfpca=0.6 dbn=0.6| 141001-mix-submissions
 0.71358 | RF | 141001-predict.1 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9-pca n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=15 | 140929-RF-predict
 0.78043 | Post | 140930-predict.10 | 140930-predict.9 max probabilites | 140929-postprocessing
   | Mix | 140930-predict.9 | 140928-predict.1 140926-predict.2 140930-predict.5 gb=0.4 rf=1 dbn=0.6| 140930-mix-submissions
-  | DBN | 140930-predict.8 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=500 clip=3| 140930-DBN-predict
+0.49115 | DBN | 140930-predict.8 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=500 clip=3| 140930-DBN-predict
 0.68890 | DBN | 140930-predict.7 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=1000 | 140930-DBN-predict
   | DBN | 140930-predict.6 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=500 | 140930-DBN-predict
 0.71603 | DBN | 140930-predict.5 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=100 | 140930-DBN-predict
@@ -38,11 +93,11 @@ AUC | Algo | Submission | Comment
 0.75955 | Post | 140928-predict.5 | 140928-predict.2 mean probabilites | 140928-postprocessing
 0.73419 | Post | 140928-predict.3 | 140928-predict.2 multiply probabilites
 0.75501 | Mix | 140928-predict.2 | 140928-predict.1 140926-predict.2 gb=0.4 rf=1 | 140927-mix-submissions
-        | GBC | 140928-predict.1 140929-target-combine.validate.1 | gen-8.5_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=1000 pratio=1 | 140927-GBC 140927-GBC-combine
+0.73188 | GBC | 140928-predict.1 140929-target-combine.validate.1 | gen-8.5_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=1000 pratio=1 | 140927-GBC 140927-GBC-combine
 0.75295 | Mix | 140927-predict.2 | 140927-predict.1 140926-predict.2 gb=0.2 rf=1 | 140927-mix-submissions
-        | GBC | 140927-predict.1 | gen-8.5_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=100 pratio=5/1 in predict | 140927-GBC 140927-GBC-combine
+0.70124 | GBC | 140927-predict.1 | gen-8.5_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 n_estimators=100 pratio=5/1 in predict | 140927-GBC 140927-GBC-combine
 0.74885 | Mix | 140926-predict.7 | 140926-predict.6 140926-predict.2 gb=0.2 rf=1 | 140926-mix-submissions
-        | GBC | 140926-predict.6 | n_estimators=1000 | 140926-GBC 140926-GBC-combine
+0.71844 | GBC | 140926-predict.6 | n_estimators=1000 | 140926-GBC 140926-GBC-combine
 0.74626 | Mix | 140926-predict.5 | 140926-predict.3 140926-predict.2 gb=0.3 rf=1 | 140926-mix-submissions
 0.72241 | Mix | 140926-predict.4 | 140926-predict.3 140926-predict.2 gb=0.7 rf=1 | 140926-mix-submissions
 0.63842 | GBC | 140926-predict.3 | n_estimators=400 gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 | 140926-GBC 140926-GBC-combine
