@@ -1,5 +1,14 @@
 AUC | Algo | Submission | Comment
 -- | --- | --- | ---
+0.81390 | Post | 141101-predict.13 | 141001-predict.4 W=0.3 T=0.03  | 141101-postprocessing-1
+0.80609 | Post | 141101-predict.12 | 141001-predict.4 W=0.3 T=0.3  | 141101-postprocessing-1
+0.78926 | Post | 141101-predict.11 | 141001-predict.4 W=0.3 T=1  | 141101-postprocessing-1
+0.81632 | Post | 141101-predict.10 | 141001-predict.4 W=0.3 T=0.1  | 141101-postprocessing-1
+0.81195 | Post | 141101-predict.9 | 141001-predict.4 W=0.4 T=0.01  | 141101-postprocessing-1
+0.81355 | Post | 141101-predict.8 | 141001-predict.4 W=0.3 (0.7max) T=0.01  | 141101-postprocessing-1
+0.78161 | Post | 141101-predict.7 | 141101-predict.5 0.9mean  | 141030-postprocessing
+0.79574 | Post | 141101-predict.6 | 141101-predict.5 0.8max  | 141030-postprocessing
+0.78239 | Mix | 141101-predict.5 | 140928-predict.1 141101-predict.3 141001-predict.1 140930-predict.5 gb=0.4 rf=2 rfpca=0.4 dbn=0.6| 141030-mix-submissions
 0.74883 | RF  | 141101-predict.4 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 SMOOTH=0 TRAIN_LOGIT=5 TEST_MIN=.05 TEST_MAX=.9 | 141101-RF-regress-w-test
 0.77403 | RF  | 141101-predict.3 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 SMOOTH=0.3 | 141101-RF-regress-w-test
 0.75249 | RF  | 141101-predict.2 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 SMOOTH=0.5 | 141101-RF-predict-w-test
