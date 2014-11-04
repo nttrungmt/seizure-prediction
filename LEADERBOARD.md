@@ -1,7 +1,12 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
-0.82247 | Post | 141103-predict.16  | 141001-predict.4 W=0.25 T=0.1 D=-0.5 | 141103-postprocessing
-0.82222 | Post | 141103-predict.15  | 141001-predict.4 W=0.2 T=0.1 D=-0.5 | 141103-postprocessing
+0.75344 | RF   | 141104-predict.5  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.05, 0.95] n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141104-RF-predict
+0.74223 | RF   | 141104-predict.4  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.2, 0.8] n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141104-RF-predict
+0.73296 | RF   | 141104-predict.3  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.9] n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141104-RF-predict
+0.75083 | RF   | 141104-predict.2  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.1, 0.9] n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141104-RF-predict
+0.74758 | RF   | 141104-predict.1  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.1,0.5,0.9] n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141104-RF-predict
+0.82247 | Post | 141103-predict.16 | 141001-predict.4 W=0.25 T=0.1 D=-0.5 | 141103-postprocessing
+0.82222 | Post | 141103-predict.15 | 141001-predict.4 W=0.2 T=0.1 D=-0.5 | 141103-postprocessing
 0.81156 | Post | 141103-predict.14 | 141103-predict.13 W=0.3 T=0.1 D=-0.5 | 141103-postprocessing
         | Mix  | 141103-predict.13 | 140928-predict.1 141103-predict.12 141001-predict.1 140930-predict.5 gb=0.4 rf=0.8 rfpca=0.4 dbn=0.6| 141103-mix-submissions
 0.73706 | RF   | 141103-predict.12 | gen-8_medianwindow-bands2-usf-w60-b0.2-b4-b8-b12-b30-b70-0.1-0.5-0.9 min_samples_split=1 bootstrap=False max_depth=10 | 141103-RF-predict
