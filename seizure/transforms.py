@@ -2633,7 +2633,7 @@ class MaxDiff:
         self.skip = skip
 
     def get_name(self):
-        name = 'maxdiff-%w%d' % self.nwindows
+        name = 'maxdiff-%d' % self.nwindows
         if self.skip != 1:
             name += '-s%d'%self.skip
         return name
