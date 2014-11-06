@@ -2623,3 +2623,35 @@ class MedianWindowBandsCorrelation1:
 
 
 
+class MaxDiff:
+    """
+    return [nwindows, nchannels] = max(abs(diff))
+    """
+    def __init__(self, nwindows, skip=1):
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.skip = skip
+
+    def get_name(self):
+        name = 'maxdiff-%w%d' % self.nwindows
+        if self.skip != 1:
+            name += '-s%d'%self.skip
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        """
+        windows = []
+
+        istartend = np.linspace(0.,data.shape[1],self.skip*self.nwindows+1)
+        for i in range(self.skip*self.nwindows+1-self.skip):
+            window = data[:,int(istartend[i]):int(istartend[i+self.skip])].astype(float)
+
+            diff = np.abs(window[:,1:]-window[:,:-1])
+            window1 = np.max(diff, axis=-1)
+            windows.append(window1)
+
+        windows = np.array(windows)
+
+        features = windows.ravel()
+        return features
