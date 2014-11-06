@@ -1,6 +1,6 @@
 {
   "task": "predict",
-  "competition-data-dir": "filtered-seizure-data",
-  "data-cache-dir": "data-cache",
+  "competition-data-dir": "/vol2/seizure-prediction/seizure-data",
+  "data-cache-dir": "/vol2/seizure-prediction/data-cache",
   "submission-dir": "submissions"
 }
