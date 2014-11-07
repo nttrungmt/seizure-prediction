@@ -1,5 +1,5 @@
 #!/bin/bash
-# D5 D1 D2 D4 D3 P1 P2
+# compute features in parallele on all files (in case you have many cores)
 
 python seizure_detection.py -b td -t Dog_4 &> log/Dog_4_td &
 python seizure_detection.py -b tt -t Dog_4 &> log/Dog_4_tt &
