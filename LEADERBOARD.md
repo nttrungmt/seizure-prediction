@@ -1,5 +1,8 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
+0.82686 | Post | 141106-predict.3  | 141106-predict.2 W=0.25 T=0.1 D=-0.5 | 141106-postprocessing
+        | Mix  | 141106-predict.2  | 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6| 141106-mix-submissions
+0.76144 | RF   | 141106-predict.1  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.05, 0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141106-RF-predict
 0.72221 | DBN  | 141104-predict.3  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.1, 0.5, 0.9] nunits=1 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=500 | 141105-DBN-predict-1
 0.69981 | DBN  | 141104-predict.3  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 clip=-3,5 percentile=[0.1, 0.5, 0.9] nunits=1 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=500 | 141105-DBN-predict
 0.71549 | DBN  | 141104-predict.2  | gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.1, 0.5, 0.9] nunits=1 300,learn_rates=0.3,learn_rate_decays=0.9,epochs=100 | 141105-DBN-predict
