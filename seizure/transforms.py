@@ -2655,3 +2655,76 @@ class MaxDiff:
 
         features = windows.ravel()
         return features
+
+class AllTimeCorrelation:
+    """
+    Energy in bands
+    return bands (fastest) * channels * nwindows (slowest)
+
+    The above is performed on windows which is resmapled to max_hz
+    """
+    def __init__(self, scale_option, nwindows, pca=False, skip=1):
+        self.scale_option = scale_option
+        assert nwindows > 0
+        self.nwindows = nwindows # data is divided into windows
+        self.pca = pca
+        self.skip = skip
+
+
+    def get_name(self):
+        name = 'alltimecorr-%s-w%d' % (self.scale_option, self.nwindows)
+        if self.pca:
+            name += '-pca'
+        if self.skip != 1:
+            name += '-s%d'%self.skip
+        return name
+
+    def apply(self, data):
+        """data[channels,samples]
+        Downsample to 400Hz, and notch 60Hz
+        split samples to nwindows
+        generate Band Correlation features from each window.
+        for each feature find the pecentile values (e.g. 10%,50%,90%) over all windows
+        """
+        if data.shape[1] > 5*60*5000:
+            def mynotch(fftfreq, notchfreq=60., notchwidth=5., Fs=5000.):
+                return np.double(np.abs(np.abs(fftfreq) - notchfreq/Fs) > (notchwidth/2.)/Fs)
+            data = resample(data, 239766, axis=-1, window=mynotch)
+        windows = []
+
+        if self.pca:
+            import sklearn.decomposition
+            data = sklearn.decomposition.PCA().fit_transform(data.T).T
+        elif self.scale_option == 'ica':
+            import sklearn.decomposition
+            data = sklearn.decomposition.FastICA().fit_transform(data.T).T
+        elif self.scale_option.startswith('14'):
+            import os
+            import cPickle as pickle
+            fname = os.path.join(cache_dir,'%s.%s.pkl'%(self.scale_option,target))
+            with open(fname, 'rb') as fp:
+                m = pickle.load(fp)
+            data = m.transform(data.T).T
+
+        istartend = np.linspace(0.,data.shape[1],self.skip*self.nwindows+1)
+        for i in range(self.skip*self.nwindows+1-self.skip):
+            window = data[:,int(istartend[i]):int(istartend[i+self.skip])].astype(float)
+
+            if self.scale_option == 'usf':
+                window = UnitScaleFeat().apply(window)
+            elif self.scale_option == 'usf1':
+                window = preprocessing.scale(window, with_std=False, axis=0)
+            elif self.scale_option == 'usf2':
+                window = UnitScaleFeat().apply(window)
+                window = window * window
+            elif self.scale_option == 'us':
+                window = UnitScale().apply(window)
+
+            window1 = TimeCorrelation(max_hz=1000000).apply(window)
+            windows.append(window1)
+
+        windows = np.array(windows)
+
+        features = windows.ravel()
+        # spectrums (fastest) * channels * windows (slowest)
+        return features

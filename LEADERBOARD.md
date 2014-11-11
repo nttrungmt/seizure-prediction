@@ -1,5 +1,18 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
+0.81204 | Post | 141107-predict.16  | 141107-predict.15 W=0.25 T=0.1 D=-0.5 | 141106-postprocessing
+        | Mix  | 141107-predict.15  | 141107-predict.4 141106-predict.1 140926-predict.2 140930-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6| 141106-mix-submissions
+0.80600 | Post | 141107-predict.14  | 141107-predict.13 W=0.25 T=0.1 D=-0.5 | 141107-fix-GBC 141106-postprocessing
+        | Mix  | 141107-predict.13  | 141107-predict.11 141107-predict.2 140926-predict.2 140930-predict.5 gb=0.7 rf=0.9 rf1=0.8 dbn=0.6| 141106-mix-submissions
+0.79869 | Post | 141107-predict.12  | 141107-predict.11 W=0.25 T=0.1 D=-0.5 | 141107-fix-GBC 141106-postprocessing
+0.81462 | Post | 141107-predict.10  | 141107-predict.4 W=0.25 T=0.1 D=-0.5 | 141106-postprocessing
+0.81281 | Post | 141107-predict.9  | 141106-predict.2 W=0.25 T=0.1 D=-0.5 | 141106-postprocessing
+        | Mix  | 141107-predict.8  | 141107-predict.4 141107-predict.2 140926-predict.2 140930-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6| 141106-mix-submissions
+0.81030 | Post | 141107-predict.7  | 141107-predict.6 W=0.25 T=0.1 D=-0.5 | 141106-postprocessing
+        | Mix  | 141107-predict.6  | 141107-predict.2 141107-predict.4  rf=0.5 gb=0.5 | 141107-mix-submissions
+0.73616 | GB   | 141107-predict.5  | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 mask_level=70000 percentile=[0.05, 0.95] nunits=2  | 141107-GBC 141107-GBC-combine
+0.76746 | GB   | 141107-predict.4  | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 mask_level=70000 percentile=[0.05, 0.95] nunits=2  | 141107-GBC-predict-1
+0.76285 | RF   | 141107-predict.3  | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 mask_level=10000 percentile=[0.05, 0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141107-RF-predict
 0.76320 | RF   | 141107-predict.2  | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 mask_level=7000 percentile=[0.05, 0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141107-RF-predict
 0.76171 | RF   | 141107-predict.1  | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.05, 0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141106-RF-predict
 0.69981 | RF   | 141106-predict.9  | gen-8_maxdiff-60 141106-data-2-hkl-2 notchwidth=5 -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.05, 0.95] nunits=3 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141106-RF-predict
