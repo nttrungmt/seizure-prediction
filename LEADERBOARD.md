@@ -1,5 +1,18 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
+0.71902 | RF   | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.05, 0.95] 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=[0.5,0.8,0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict-1
+0.82537 | Post | 141106-predict.12  | 141111-predict.11 W=0.25 T=0.1 D=-0.5 | 141111-postprocessing
+        | Mix  | 141111-predict.11  | 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 141111-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6 rftime=0.2| 141111-mix-submissions
+0.82322 | Post | 141106-predict.10  | 141111-predict.9 W=0.25 T=0.1 D=-0.5 | 141111-postprocessing
+        | Mix  | 141111-predict.9  | 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 141111-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6 rftime=0.5| 141111-mix-submissions
+0.80767 | Post | 141106-predict.8  | 141106-predict.7 W=0.25 T=0.1 D=-0.5 | 141111-postprocessing
+        | Mix  | 141111-predict.7  | 141107-predict.4 141106-predict.1 140926-predict.2 140930-predict.5 141111-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6 rftime=0.6| 141111-mix-submissions
+0.66824 | RF   | 141111-predict.6   | 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=[0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict
+0.67937 | RF   | 141111-predict.5   | 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=[0.5,0.8,0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict
+0.67110 | RF   | 141111-predict.4   | 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=arange(0,1,0.1) nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict
+0.63464 | RF   | 141111-predict.3   | 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=None nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict
+0.67418 | RF   | 141111-predict.2   | 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=[0.05, 0.2, 0.5, 0.8, 0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict
+0.66854 | RF   | 141111-predict.1   | 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=[0.05, 0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict
 0.81204 | Post | 141107-predict.16  | 141107-predict.15 W=0.25 T=0.1 D=-0.5 | 141106-postprocessing
         | Mix  | 141107-predict.15  | 141107-predict.4 141106-predict.1 140926-predict.2 140930-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6| 141106-mix-submissions
 0.80600 | Post | 141107-predict.14  | 141107-predict.13 W=0.25 T=0.1 D=-0.5 | 141107-fix-GBC 141106-postprocessing
