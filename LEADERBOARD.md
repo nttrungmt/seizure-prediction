@@ -1,5 +1,7 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
+0.82606 | Post | 141117-predict.5 | 141112-test-signal-jump 141116-predict.2 W=0.25 T=0.1 D=-0.5 | 141117-postprocessing
+        | Mix  | 141117-predict.4  | 141116-predict.6 141117-predict.1 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 svm=.8 svm1=.4 gb=.4 rf=.9 rf1=.8 dbn=.6| 141117-mix-submissions
 0.82258 | Post | 141117-predict.3 | 141112-test-signal-jump 141116-predict.2 W=0.25 T=0.1 D=-0.5 | 141117-postprocessing
         | Mix  | 141117-predict.2  | 141116-predict.6 141117-predict.1 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 svm=.9 svm1=.7 gb=.4 rf=.9 rf1=.8 dbn=.6| 141117-mix-submissions
         | SVM  | 141117-predict.1  | | 141116-SVM-hyperopt 141116-SVM-combine
