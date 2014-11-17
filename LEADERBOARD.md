@@ -1,5 +1,22 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
+0.83084 | Post | 141116-predict.8  | 141112-test-signal-jump 141116-predict.7 W=0.25 T=0.1 D=-0.5 | 141116-postprocessing
+        | Mix  | 141116-predict.7  | 141116-predict.6 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 svm=.9 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6| 141116-mix-submissions
+0.76306 | SVM  | 141116-predict.6  | C=70 | 141116-SVM-predict
+0.75815 | SVM  | 141116-predict.6  | C=30 | 141116-SVM-predict
+0.75657 | SVM  | 141116-predict.6  | C=100 | 141116-SVM-predict
+0.75287 | SVM  | 141116-predict.6  | C=10 | 141116-SVM-predict
+0.70737 | SVM  | 141116-predict.6  | C=.1 | 141116-SVM-predict
+0.73959 | SVM  | 141116-predict.6  | C=1 | 141116-SVM-predict
+0.82438 | Post | 141112-predict.10  | 141112-test-signal-jump 141112-predict.9 W=0.25 T=0.1 D=-0.5 | 141112-postprocessing-1
+        | Mix  | 141112-predict.9  | 140928-predict.1 141106-predict.1 140926-predict.2 140926-predict.2 141111-predict.5 gb=0.4 rf=1.7 rf1=0 dbn=0.6 rftime=0| 141111-mix-submissions
+0.82727 | Post | 141112-predict.8  | 141112-test-signal-jump 141112-predict.7 W=0.25 T=0.1 D=-0.5 | 141112-postprocessing-1
+        | Mix  | 141112-predict.7  | 140928-predict.1 141106-predict.1 140926-predict.2 140926-predict.2 141111-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6 rftime=0.1| 141111-mix-submissions
+0.82739 | Post | 141112-predict.6  | 141112-test-signal-jump 141106-predict.2 W=0.3 T=0.15 D=-0.5 | 141112-postprocessing
+0.82466 | Post | 141112-predict.5  | 141112-test-signal-jump 141106-predict.2 W=0.25 T=0.15 D=-0.5 | 141112-postprocessing
+0.82645 | Post | 141112-predict.4  | 141112-test-signal-jump 141106-predict.2 W=0.25 T=0.05 D=-0.5 | 141112-postprocessing
+0.81895 | Post | 141112-predict.3  | 141112-test-signal-jump 141106-predict.2 W=0.2 T=0.1 D=-0.55 | 141112-postprocessing
+0.75492 | RF   | 141112-predict.2  | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.05, 0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141112-RF-predict-1
 0.82768 | Post | 141112-predict.1  | 141112-test-signal-jump 141106-predict.2 W=0.25 T=0.1 D=-0.5 | 141112-postprocessing
 0.71902 | RF   | gen-8_maxdiff-60 RAW -> gen-8_allbands2-usf-w60-b0.2-b4-b8-b12-b30-b70 percentile=[0.05, 0.95] 141106-data-2-hkl-2 notchwidth=5 -> gen-8_alltimecorr-usf-w60 percentile=[0.5,0.8,0.95] nunits=2 n_estimators=3000, min_samples_split=1, bootstrap=False,max_depth=10 | 141111-RF-predict-1
 0.82537 | Post | 141106-predict.12  | 141111-predict.11 W=0.25 T=0.1 D=-0.5 | 141111-postprocessing
