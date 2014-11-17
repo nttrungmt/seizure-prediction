@@ -1,5 +1,10 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
+0.82258 | Post | 141117-predict.3 | 141112-test-signal-jump 141116-predict.2 W=0.25 T=0.1 D=-0.5 | 141117-postprocessing
+        | Mix  | 141117-predict.2  | 141116-predict.6 141117-predict.1 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 svm=.9 svm1=.7 gb=.4 rf=.9 rf1=.8 dbn=.6| 141117-mix-submissions
+        | SVM  | 141117-predict.1  | | 141116-SVM-hyperopt 141116-SVM-combine
+0.82899 | Post | 141116-predict.10 | 141112-test-signal-jump 141116-predict.7 W=0.25 T=0.1 D=-0.5 | 141116-postprocessing
+        | Mix  | 141116-predict.9  | 141116-predict.6 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 svm=1.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6| 141116-mix-submissions
 0.83084 | Post | 141116-predict.8  | 141112-test-signal-jump 141116-predict.7 W=0.25 T=0.1 D=-0.5 | 141116-postprocessing
         | Mix  | 141116-predict.7  | 141116-predict.6 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 svm=.9 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6| 141116-mix-submissions
 0.76306 | SVM  | 141116-predict.6  | C=70 | 141116-SVM-predict
@@ -8,7 +13,7 @@
 0.75287 | SVM  | 141116-predict.6  | C=10 | 141116-SVM-predict
 0.70737 | SVM  | 141116-predict.6  | C=.1 | 141116-SVM-predict
 0.73959 | SVM  | 141116-predict.6  | C=1 | 141116-SVM-predict
-0.82438 | Post | 141112-predict.10  | 141112-test-signal-jump 141112-predict.9 W=0.25 T=0.1 D=-0.5 | 141112-postprocessing-1
+0.82438 | Post | 141112-predict.10 | 141112-test-signal-jump 141112-predict.9 W=0.25 T=0.1 D=-0.5 | 141112-postprocessing-1
         | Mix  | 141112-predict.9  | 140928-predict.1 141106-predict.1 140926-predict.2 140926-predict.2 141111-predict.5 gb=0.4 rf=1.7 rf1=0 dbn=0.6 rftime=0| 141111-mix-submissions
 0.82727 | Post | 141112-predict.8  | 141112-test-signal-jump 141112-predict.7 W=0.25 T=0.1 D=-0.5 | 141112-postprocessing-1
         | Mix  | 141112-predict.7  | 140928-predict.1 141106-predict.1 140926-predict.2 140926-predict.2 141111-predict.5 gb=0.4 rf=0.9 rf1=0.8 dbn=0.6 rftime=0.1| 141111-mix-submissions
