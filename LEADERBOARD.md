@@ -1,5 +1,24 @@
   AUC   | Algo |     Submission    | Comment
   --    | ---  |         ---       | ---
+0.90036	0.85074	| Post | 141124.18 | github/SPC2014/submission.csv W=0.65 T=0.2 D=-0.6 | 141124-postprocessing
+0.90119	0.85137	| Post | 141124.17 | github/SPC2014/submission.csv W=0.6 T=0.2 D=-0.6 | 141124-postprocessing
+0.90149	0.85105	| Post | 141124.16 | github/SPC2014/submission.csv W=0.55 T=0.2 D=-0.6 | 141124-postprocessing
+0.90127	0.85081	| Post | 141124.15 | github/SPC2014/submission.csv W=0.5 T=0.2 D=-0.6 | 141124-postprocessing
+0.90119	0.85051	| Post | 141124.14 | github/SPC2014/submission.csv W=0.45 T=0.2 D=-0.6 | 141124-postprocessing
+0.90011	0.85027	| Post | 141124.13 | github/SPC2014/submission.csv W=0.4 T=0.2 D=-0.6 | 141124-postprocessing
+0.89934	0.84956 | Post | 141124.12 | github/SPC2014/submission.csv W=0.35 T=0.2 D=-0.6 | 141124-postprocessing
+0.89838	0.84896 | Post | 141124.11 | github/SPC2014/submission.csv W=0.3 T=0.2 D=-0.6 | 141124-postprocessing
+0.89602	0.84728	| Post | 141124.10 | github/SPC2014/submission.csv W=0.2 T=0.2 D=-0.6 | 141124-postprocessing
+0.89719	0.84831 | Post | 141124.9 | github/SPC2014/submission.csv W=0.25 T=0.2 D=-0.6 | 141124-postprocessing
+0.88998	0.84735 | Post | 141124.8 | github/SPC2014/submission.csv W=0.25 T=1 D=-0.6 | 141124-postprocessing
+0.89430	0.84821 | Post | 141124.7 | github/SPC2014/submission.csv W=0.25 T=0.3 D=-0.6 | 141124-postprocessing
+0.89821	0.83945 | Post | 141124.6 | github/SPC2014/submission.csv W=0.25 T=0.01 D=-0.6 | 141124-postprocessing
+0.90218	0.84550 | Post | 141124.5 | github/SPC2014/submission.csv W=0.25 T=0.1 D=-0.65 | 141124-postprocessing
+0.90001	0.84335 | Post | 141124.4 | github/SPC2014/submission.csv W=0.25 T=0.1 D=-0.55 | 141124-postprocessing
+0.90514	0.84543 | Post | 141124.3 | github/SPC2014/submission.csv W=0.25 T=0.1 D=-0.7 | 141124-postprocessing
+0.90147	0.84619 | Post | 141124.2 | github/SPC2014/submission.csv W=0.25 T=0.1 D=-0.6 | 141124-postprocessing
+0.90120/0.84417 | Post | 141124.1 | github/SPC2014/submission.csv W=0.25 T=0.1 D=-0.5 | 141124-postprocessing
+0.88969/0.84652 | Andy | github/SPC2014/submission.csv |
 0.82606 | Post | 141117-predict.5 | 141112-test-signal-jump 141116-predict.2 W=0.25 T=0.1 D=-0.5 | 141117-postprocessing
         | Mix  | 141117-predict.4  | 141116-predict.6 141117-predict.1 140928-predict.1 141106-predict.1 140926-predict.2 140930-predict.5 svm=.8 svm1=.4 gb=.4 rf=.9 rf1=.8 dbn=.6| 141117-mix-submissions
 0.82258 | Post | 141117-predict.3 | 141112-test-signal-jump 141116-predict.2 W=0.25 T=0.1 D=-0.5 | 141117-postprocessing
